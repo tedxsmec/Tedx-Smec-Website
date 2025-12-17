@@ -70,3 +70,17 @@ export default function Sponsors() {
     </div>
   );
 }
+
+
+// import React from "react";
+// import SponsorsSection from "../components/SponsorsSection";
+
+// export default function Sponsors() {
+//   return (
+//     <div className="bg-black text-white">
+//       <main className="pt-24 px-4 max-w-6xl mx-auto">
+//         <SponsorsSection />
+//       </main>
+//     </div>
+//   );
+// }
