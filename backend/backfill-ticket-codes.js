@@ -1,34 +1,3 @@
-// // scripts/backfill-ticket-codes.js
-// require('dotenv').config();
-// const mongoose = require('mongoose');
-// const Ticket = require('./models/Ticket');
-// const { generateReadableCode } = require('./utils/codeGen');
-
-// async function main() {
-//   await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-//   const cursor = Ticket.find({ $or: [{ ticketCode: { $exists: false } }, { ticketCode: null }] }).cursor();
-//   let count = 0;
-//   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
-//     // generate unique
-//     let code;
-//     for (let i = 0; i < 8; i++) {
-//       const cand = generateReadableCode(8);
-//       const exists = await Ticket.findOne({ ticketCode: cand }).lean().select('_id').exec();
-//       if (!exists) { code = cand; break; }
-//     }
-//     if (!code) code = generateReadableCode(10);
-//     doc.ticketCode = code;
-//     await doc.save();
-//     count++;
-//     if (count % 50 === 0) console.log('Processed', count);
-//   }
-//   console.log('Backfill complete, total:', count);
-//   process.exit(0);
-// }
-
-// main().catch(err => { console.error(err); process.exit(1); });
-
-
 // backfill-ticket-codes.js
 require('dotenv').config();
 const mongoose = require('mongoose');
