@@ -121,7 +121,10 @@ const adminBookingsRouter = require('./routes/admin/bookings');
 
 const app = express();
 
-/* ---------- CORS ---------- */
+/* ---------- FAVICON (PREVENT 500) ---------- */
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+/* ---------- CORS (SERVERLESS SAFE – NEVER THROW) ---------- */
 const allowedOrigins = [
   process.env.CORS_ORIGIN,
   'http://localhost:5173',
@@ -134,20 +137,24 @@ const allowedOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
-      // allow server-to-server, Postman, webhooks
+      // Allow server-to-server, Postman, browser opening backend URL
       if (!origin) return callback(null, true);
+
+      // Allow any Vercel domain
+      if (origin.includes('vercel.app')) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error('CORS not allowed by server'));
+      // ❌ DO NOT throw in serverless
+      return callback(null, false);
     },
     credentials: true,
   })
 );
 
-/* ---------- BODY PARSERS ---------- */
+/* ---------- BODY PARSER ---------- */
 app.use(express.json());
 
 /* ---------- STATIC FILES ---------- */
@@ -156,23 +163,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 /* ---------- DATABASE (SERVERLESS SAFE) ---------- */
 const mongoUri = process.env.MONGODB_URI;
 
-if (!mongoUri) {
-  console.error('❌ MONGODB_URI missing in environment variables');
-  throw new Error('MONGODB_URI not set');
-}
-
-// Prevent multiple connections in serverless
-if (mongoose.connection.readyState === 0) {
+// ⚠️ Never throw during startup on Vercel
+if (mongoUri && mongoose.connection.readyState === 0) {
   mongoose
     .connect(mongoUri)
-    .then(() => console.log('✅ Connected to MongoDB'))
+    .then(() => console.log('✅ MongoDB connected'))
     .catch((err) => {
-      console.error('❌ MongoDB connection error:', err);
-      throw err;
+      console.error('❌ MongoDB connection error:', err.message);
+      // DO NOT throw — allow app to run
     });
 }
 
-/* ---------- ROOT CHECK ---------- */
+/* ---------- ROOT CHECK (OPENING URL WORKS) ---------- */
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
