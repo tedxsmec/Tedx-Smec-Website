@@ -4,16 +4,16 @@ import axios from "axios";
 /**
  * API base URL resolution:
  * - Development  → localhost
- * - Production   → VITE_API_BASE_URL (Railway / Render)
+ * - Production   → VITE_API_BASE (Railway / Render)
  */
 const BASE_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:4000/api"
-    : import.meta.env.VITE_API_BASE_URL;
+    : import.meta.env.VITE_API_BASE;
 
 if (!BASE_URL) {
   throw new Error(
-    "VITE_API_BASE_URL is not defined for production environment"
+    "VITE_API_BASE is not defined for production environment"
   );
 }
 
