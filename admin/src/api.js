@@ -17,6 +17,12 @@ if (!BASE_URL) {
   );
 }
 
+const api = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+  timeout: 120000, // 2 minutes
+});
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("admin_token");
