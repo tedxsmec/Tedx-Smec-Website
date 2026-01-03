@@ -491,7 +491,7 @@ app.use(cors({
 app.post(
   '/api/payments/webhook',
   express.raw({ type: 'application/json' }),
-  require('./routes/webhook')
+  require('../routes/webhook')
 );
 
 /* =========================================================
@@ -516,44 +516,44 @@ app.get('/', (_, res) => {
    LAZY ROUTE LOADING (IMPORTANT)
    ========================================================= */
 app.use('/api/events', (req, res, next) => {
-  require('./routes/events')(req, res, next);
+  require('../routes/events')(req, res, next);
 });
 
 app.use('/api/book', (req, res, next) => {
-  require('./routes/booking')(req, res, next);
+  require('../routes/booking')(req, res, next);
 });
 
 /* ---------------- ADMIN ---------------- */
 app.use('/api/admin/auth', (req, res, next) => {
-  require('./routes/admin/auth')(req, res, next);
+  require('../routes/admin/auth')(req, res, next);
 });
 
 app.use('/api/admin/events', (req, res, next) => {
-  require('./routes/admin/events')(req, res, next);
+  require('../routes/admin/events')(req, res, next);
 });
 
 app.use('/api/admin/speakers', (req, res, next) => {
-  require('./routes/admin/speakers')(req, res, next);
+  require('../routes/admin/speakers')(req, res, next);
 });
 
 app.use('/api/admin/sponsors', (req, res, next) => {
-  require('./routes/admin/sponsors')(req, res, next);
+  require('../routes/admin/sponsors')(req, res, next);
 });
 
 app.use('/api/admin/organizers', (req, res, next) => {
-  require('./routes/admin/organizers')(req, res, next);
+  require('../routes/admin/organizers')(req, res, next);
 });
 
 app.use('/api/admin/coordinators', (req, res, next) => {
-  require('./routes/admin/coordinators')(req, res, next);
+  require('../routes/admin/coordinators')(req, res, next);
 });
 
 app.use('/api/admin/media', (req, res, next) => {
-  require('./routes/admin/media')(req, res, next);
+  require('../routes/admin/media')(req, res, next);
 });
 
 app.use('/api/admin/bookings', (req, res, next) => {
-  require('./routes/admin/bookings')(req, res, next);
+  require('../routes/admin/bookings')(req, res, next);
 });
 
 /* =========================================================
