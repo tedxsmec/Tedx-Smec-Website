@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -9,10 +9,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(
-        'http://localhost:4000/api/admin/auth/login',
-        form
-      );
+      const res = await api.post('/admin/auth/login', form);
       localStorage.setItem('admin_token', res.data.token);
       window.location.href = '/admin/events';
     } catch (err) {
