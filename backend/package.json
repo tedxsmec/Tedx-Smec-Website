@@ -1,15 +1,16 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "main": "index.js",
   "type": "commonjs",
   "engines": {
     "node": "24.x"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node index.js",
     "seed": "node seed.js",
     "dev": "vercel dev",
-    "server": "nodemon server.js"
+    "server": "nodemon src/server.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
