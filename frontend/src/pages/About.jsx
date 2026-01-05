@@ -4,25 +4,29 @@ import { Quote, Globe, Target, Sparkles, ChevronRight, GraduationCap } from "luc
 import ContactSection from "../components/ContactSection";
 import smecClg from "../assets/smec_clg.jpeg";
 
+import chairman from "../assets/Chairman clg.jpg";
+import Executive from "../assets/executive director clg.jpg";
+import director from "../assets/Director Clg.jpeg";
+
 
 // --- LEADERSHIP DATA ---
 const PATRONS = [
   {
     role: "Chairman",
     name: "Sri. M. Laxman Reddy",
-    image: "https://mlrit.ac.in/wp-content/uploads/2022/02/team-1.jpg", 
+    image: chairman, 
     message: "Education is not just about employability; it is about empowerment. At SMEC, we empower students to think beyond the horizon."
   },
   {
     role: "Executive Director",
     name: "Sri. G. Chandrasekhar Yadav",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmhZ5q4YZyolMFr09_tF7zqwjY5tUxC-2JKw&s", 
+    image: Executive, 
     message: "Innovation is the heartbeat of progress. We support platforms like TEDx to let our students' ideas resonate globally."
   },
   {
     role: "Director",
     name: "Dr. K. Ravindra",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReicQo7_tIEdJSFm71_KoeQYat6bnmDEnrQA&s", 
+    image: director, 
     message: "TEDxSMEC is more than an event; it is a testament to our commitment to holistic growth and intellectual curiosity."
   }
 ];
