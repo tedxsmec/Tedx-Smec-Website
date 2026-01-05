@@ -467,25 +467,52 @@ app.get('/health', (_, res) => res.status(200).send('OK'));
 /* =========================================================
    CORS
    ========================================================= */
-const allowedOrigins = [
-  process.env.CORS_ORIGIN,
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5174',
-  'http://localhost:4173',
-  'https://tedx-smec-website.vercel.app',
-  'https://tedx-smec-admin.vercel.app',
-  'https://tedxsmec.online'
-].filter(Boolean);
+// const allowedOrigins = [
+//   process.env.CORS_ORIGIN,
+//   'http://localhost:5173',
+//   'http://localhost:5174',
+//   'http://127.0.0.1:5174',
+//   'http://localhost:4173',
+//   'https://tedx-smec-website.vercel.app',
+//   'https://tedx-smec-admin.vercel.app',
+//   'https://tedxsmec.online'
+// ].filter(Boolean);
 
-app.use(cors({
-  origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error('CORS not allowed'), false);
-  },
-  credentials: true
-}));
+// app.use(cors({
+//   origin(origin, cb) {
+//     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+//     return cb(new Error('CORS not allowed'), false);
+//   },
+//   credentials: true
+// }));
 
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map(o => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow server-to-server / Postman / curl
+      if (!origin) return callback(null, true);
+
+      // Allow all Vercel deployments (prod + preview)
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      // Allow env-defined origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.error("❌ Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"), false);
+    },
+    credentials: true,
+  })
+);
 /* =========================================================
    RAZORPAY WEBHOOK (RAW BODY ONLY FOR THIS ROUTE)
    ========================================================= */
