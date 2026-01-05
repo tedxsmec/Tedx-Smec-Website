@@ -474,7 +474,8 @@ const allowedOrigins = [
   'http://127.0.0.1:5174',
   'http://localhost:4173',
   'https://tedx-smec-website.vercel.app',
-  'https://tedx-smec-admin.vercel.app'
+  'https://tedx-smec-admin.vercel.app',
+  'https://tedxsmec.online'
 ].filter(Boolean);
 
 app.use(cors({
