@@ -57,7 +57,6 @@ export default function TeamSection() {
   const role = current.role || current.designation || current.department || "Team Member";
 
   return (
-    // UPDATED ASPECT RATIO: Simulates a neat portrait card
     <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl group">
       <AnimatePresence mode="wait">
         <motion.div

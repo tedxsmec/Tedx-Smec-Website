@@ -165,6 +165,18 @@ export default function EventDetail() {
           </p>
         </section>
 
+        {/* ACTION */}
+        {isUpcoming && (
+          <button
+            onClick={() =>
+              navigate(`/events/${event.slug || event._id}/book`)
+            }
+            className="px-10 py-5 bg-red-600 hover:bg-red-700 rounded-xl font-bold uppercase tracking-widest flex items-center gap-3 transition"
+          >
+            Reserve Seat <ArrowRight />
+          </button>
+        )}
+
         {/* SPEAKERS */}
         {event.speakers?.length > 0 && (
           <HorizontalSection title="Speakers">
@@ -199,19 +211,7 @@ export default function EventDetail() {
               <SponsorCard key={sp._id} data={sp} />
             ))}
           </HorizontalSection>
-        )}
-
-        {/* ACTION */}
-        {isUpcoming && (
-          <button
-            onClick={() =>
-              navigate(`/events/${event.slug || event._id}/book`)
-            }
-            className="px-10 py-5 bg-red-600 hover:bg-red-700 rounded-xl font-bold uppercase tracking-widest flex items-center gap-3 transition"
-          >
-            Reserve Seat <ArrowRight />
-          </button>
-        )}
+        )}        
       </div>
     </div>
   );

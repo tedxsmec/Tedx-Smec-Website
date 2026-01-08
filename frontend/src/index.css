@@ -154,3 +154,11 @@
 .heading-tight {
   letter-spacing: -0.02em;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

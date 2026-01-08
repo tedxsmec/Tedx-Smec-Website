@@ -44,7 +44,7 @@ export default function Footer() {
 
           {/* BRAND */}
           <div>
-            <h3 className="text-2xl font-bold text-white mb-4">
+            <h3 className="text-2xl font-bold text-red-600 mb-4">
               TED<span className="text-red-600">x</span>SMEC
             </h3>
             <p className="text-gray-400 mb-4 leading-relaxed">

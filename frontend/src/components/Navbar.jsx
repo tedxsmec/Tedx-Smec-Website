@@ -50,7 +50,6 @@ export default function Navbar() {
     <>
       <nav
         id="navbar"
-        // FIX: When menu is open, Nav jumps to z-[120] to sit ABOVE the overlay (z-[100])
         className={`fixed top-0 left-0 right-0 transition-all duration-300 ${isMobileMenuOpen ? "z-[120]" : "z-50"
           } ${isScrolled || isMobileMenuOpen
             ? "bg-black/90 backdrop-blur-md shadow-lg py-3"
