@@ -393,7 +393,8 @@ router.post('/', async (req, res) => {
       rollNumber,
       year,
       department,
-      section
+      section,
+      quantity
     } = req.body;
 
     if (!eventId || !studentName || !email || !phone) {
@@ -421,6 +422,7 @@ router.post('/', async (req, res) => {
       eventId: event._id,
       eventName: event.name,
       price: event.price ?? 0,
+      quantity: quantity || 1,
       studentName,
       rollNumber,
       year,

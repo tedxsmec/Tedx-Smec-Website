@@ -156,6 +156,7 @@ export default function Bookings() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Name</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Event</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Ticket Code</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Qty</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Email</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Phone</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Status</th>
@@ -170,6 +171,11 @@ export default function Bookings() {
                     <td className="px-4 py-3 text-sm text-gray-200">{b.studentName ?? b.applicantName}</td>
                     <td className="px-4 py-3 text-sm text-gray-200">{b.eventName ?? (b.eventId?.name || b.eventId)}</td>
                     <td className="px-4 py-3 text-sm text-gray-200">{b.ticketCode || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-200">
+                      <span className="px-2 py-1 rounded bg-gray-800 text-white text-xs font-semibold">
+                        {b.quantity || 1}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-200">{b.email}</td>
                     <td className="px-4 py-3 text-sm text-gray-200">{b.phone}</td>
                     <td className="px-4 py-3 text-sm">
@@ -205,7 +211,7 @@ export default function Bookings() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan="9" className="px-4 py-6 text-center text-gray-400">No tickets found</td>
+                    <td colSpan="10" className="px-4 py-6 text-center text-gray-400">No tickets found</td>
                   </tr>
                 )}
               </tbody>
@@ -271,6 +277,9 @@ export default function Bookings() {
                         {selectedTicket.rollNumber && <div><strong>Roll No:</strong> {selectedTicket.rollNumber}</div>}
                         {selectedTicket.department && <div><strong>Dept:</strong> {selectedTicket.department}</div>}
                         {selectedTicket.section && <div><strong>Section:</strong> {selectedTicket.section}</div>}
+                        {selectedTicket.quantity && selectedTicket.quantity > 1 && (
+                          <div><strong>Quantity:</strong> <span className="px-2 py-1 rounded bg-red-900 text-white text-sm font-bold">{selectedTicket.quantity} tickets</span></div>
+                        )}
                         <div><strong>Email:</strong> {selectedTicket.email}</div>
                         <div><strong>Phone:</strong> {selectedTicket.phone}</div>
                         <div><strong>Event:</strong> {selectedTicket.eventName || (selectedTicket.eventId?.name ?? selectedTicket.eventId)}</div>

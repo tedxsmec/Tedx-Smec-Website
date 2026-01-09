@@ -25,6 +25,7 @@ const TicketSchema = new Schema({
   eventId: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
   eventName: { type: String }, // optional snapshot
   price: { type: Number, default: 0 },
+  quantity: { type: Number, default: 1 }, // number of tickets
 
   studentName: { type: String, required: true },
   rollNumber: String,

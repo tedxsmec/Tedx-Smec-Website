@@ -608,6 +608,10 @@ async function generatePdfBuffer(ticket) {
         .join(" / ");
       if (classInfo) row("Class:", classInfo);
 
+      if (ticket.quantity && ticket.quantity > 1) {
+        row("Tickets:", `${ticket.quantity} tickets`);
+      }
+
       row("Ticket Code:", ticket.ticketCode);
 
       row(

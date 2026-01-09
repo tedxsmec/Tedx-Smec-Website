@@ -156,6 +156,7 @@ export default function BookingForm() {
         year: form.year,
         department: form.department,
         section: form.section,
+        quantity: form.tickets,
       };
 
       const res = await api.post("/book", payload);
@@ -395,6 +396,13 @@ export default function BookingForm() {
                       <p className="text-gray-400 text-sm">Event</p>
                       <p className="text-lg font-semibold text-white">{event.name}</p>
                     </div>
+
+                    {ticket.quantity && ticket.quantity > 1 && (
+                      <div>
+                        <p className="text-gray-400 text-sm">Number of Tickets</p>
+                        <p className="text-lg font-semibold text-white">{ticket.quantity} tickets</p>
+                      </div>
+                    )}
 
                     <div>
                       <p className="text-gray-400 text-sm">Roll Number</p>
