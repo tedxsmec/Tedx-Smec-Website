@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
   try {
     const bookings = await Ticket.find()
       .sort({ createdAt: -1 })
-      .select('studentName ticketCode email phone status createdAt eventId rollNumber year department section')
+      .select('studentName ticketCode email phone status createdAt eventId rollNumber year department section quantity')
       .populate('eventId', 'name'); // populate event name
     res.json(bookings);
   } catch (err) {

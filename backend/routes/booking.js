@@ -434,8 +434,55 @@ router.post('/', async (req, res) => {
       ticketCode
     });
 
-    // Create Razorpay order
-    const amountPaise = Math.round((event.price || 0) * 100);
+    // FREE EVENT - skip payment, finalize ticket immediately
+    if (!event.price || event.price === 0) {
+      ticket.status = 'paid';
+
+      // Generate assets for free event
+      try {
+        ticket.qrDataUrl = await generateQrDataUrl(ticket.ticketCode);
+
+        const imageBuffer = await generateTicketImageBuffer(ticket);
+        if (imageBuffer) {
+          const imageUpload = await uploadToCloudinary(
+            imageBuffer,
+            'tedxsmec/tickets/images',
+            'image'
+          );
+          ticket.imageUrl = imageUpload.secure_url;
+        }
+
+        const pdfBuffer = await generatePdfBuffer(ticket);
+        const pdfUpload = await uploadToCloudinary(
+          pdfBuffer,
+          'tedxsmec/tickets/pdfs',
+          'raw'
+        );
+        ticket.pdfUrl = pdfUpload.secure_url;
+        ticket.pdfTicketBase64 = pdfBuffer.toString('base64');
+
+        await ticket.save();
+      } catch (err) {
+        console.error('Free event asset generation failed', err);
+      }
+
+      // Send email for free event
+      try {
+        await sendTicketEmail(ticket);
+      } catch (err) {
+        console.error('Free event email failed', err);
+      }
+
+      // Return ticket data for free event
+      return res.json({
+        ok: true,
+        ticket: ticket.toObject(),
+        message: 'Free ticket booked successfully!'
+      });
+    }
+
+    // PAID EVENT - create razorpay order
+    const amountPaise = Math.round(event.price * (ticket.quantity || 1) * 100);
     const order = await razorpay.orders.create({
       amount: amountPaise,
       currency: 'INR',
@@ -504,8 +551,11 @@ router.post('/verify', async (req, res) => {
 
     /* ---------------- ASSET GENERATION (OPTIONAL) ---------------- */
     try {
+      console.log('Starting asset generation for ticket:', ticket.ticketCode);
+      
       // QR
       ticket.qrDataUrl = await generateQrDataUrl(ticket.ticketCode);
+      console.log('QR code generated');
 
       // Image (skipped safely if null)
       const imageBuffer = await generateTicketImageBuffer(ticket);
@@ -516,10 +566,13 @@ router.post('/verify', async (req, res) => {
           'image'
         );
         ticket.imageUrl = imageUpload.secure_url;
+        console.log('Ticket image uploaded');
       }
 
       // PDF
       const pdfBuffer = await generatePdfBuffer(ticket);
+      console.log('PDF generated, size:', pdfBuffer.length);
+      
       const pdfUpload = await uploadToCloudinary(
         pdfBuffer,
         'tedxsmec/tickets/pdfs',
@@ -527,10 +580,13 @@ router.post('/verify', async (req, res) => {
       );
       ticket.pdfUrl = pdfUpload.secure_url;
       ticket.pdfTicketBase64 = pdfBuffer.toString('base64');
+      console.log('PDF uploaded and base64 saved');
 
       await ticket.save();
+      console.log('Ticket saved with all assets');
     } catch (err) {
-      console.error('ticket asset generation failed', err);
+      console.error('ticket asset generation failed:', err);
+      console.error('Error stack:', err.stack);
       // Payment already saved — never rollback
     }
 
@@ -547,7 +603,9 @@ router.post('/verify', async (req, res) => {
       console.error('send whatsapp failed', err);
     }
 
-    res.json({ ok: true, data: ticket });
+    // Return complete ticket object with all generated fields
+    const ticketData = ticket.toObject();
+    res.json({ ok: true, data: ticketData });
   } catch (err) {
     console.error('verify error', err);
     res.status(500).json({ error: err.message });

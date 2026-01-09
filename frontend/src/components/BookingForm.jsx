@@ -112,6 +112,14 @@ export default function BookingForm() {
         }
       },
 
+      modal: {
+        ondismiss: () => {
+          // User closed the payment modal without completing payment
+          setMessage({ type: "error", text: "Payment cancelled. Please try again." });
+          setSubmitting(false);
+        }
+      },
+
       prefill: {
         name: form.name,
         email: form.email,
@@ -344,6 +352,21 @@ export default function BookingForm() {
                   )}
                 </Section>
 
+                {/* STATUS MESSAGE NEAR BUTTON */}
+                {message && (
+                  <div
+                    className={`p-4 rounded-xl text-center font-medium ${
+                      message.type === "error"
+                        ? "bg-red-900/40 border border-red-600 text-red-200"
+                        : message.type === "success"
+                        ? "bg-green-900/40 border border-green-600 text-green-200"
+                        : "bg-yellow-900/40 border border-yellow-600 text-yellow-200"
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                )}
+
                 {/* SUBMIT BUTTON */}
                 <button
                   type="submit"
@@ -356,6 +379,13 @@ export default function BookingForm() {
                     ? `Pay ${formatINR(totalAmount)} & Book`
                     : "Book Tickets (Free)"}
                 </button>
+
+                {/* HELPER TEXT BELOW BUTTON */}
+                <p className="text-center text-xs text-gray-500 mt-2">
+                  {submitting 
+                    ? "Please wait while we process your booking..."
+                    : "By booking, you agree to our terms and conditions"}
+                </p>
 
               </form>
             ) : (
