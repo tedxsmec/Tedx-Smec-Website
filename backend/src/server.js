@@ -455,6 +455,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+// 🔥 FORCE MODEL REGISTRATION
+require("../models/Speaker");
+require("../models/Sponsor");
+require("../models/Organizer");
+require("../models/FacultyCoordinator");
+require("../models/Event");
+require("../models/Ticket");
+
 const mongoose = require('mongoose');
 
 const app = express();
@@ -613,4 +621,7 @@ async function connectDB() {
   }
 }
 
+
 connectDB();
+
+console.log("Registered models:", mongoose.modelNames());
