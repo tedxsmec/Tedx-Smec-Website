@@ -276,7 +276,7 @@ router.post('/', async (req, res) => {
         );
         ticket.imageUrl = imageUpload.secure_url;
       }
-
+      
       // PDF
       const pdfBuffer = await generatePdfBuffer(ticket);
       const pdfUpload = await uploadToCloudinary(

@@ -520,7 +520,7 @@ export default function TeamPage() {
   const [activeTab, setActiveTab] = useState("Technical");
   const [loading, setLoading] = useState(true);
 
-  const teamList = ["Technical", "Media", "Design", "Marketing", "Curation", "Operations", "Logistics", "Sponsorship"];
+  const teamList = ["Technical", "Media", "Design", "Marketing", "Curation", "Operations", "Logistics", "Sponsorship" , "Finance"];
 
   useEffect(() => {
     const fetchAll = async () => {
