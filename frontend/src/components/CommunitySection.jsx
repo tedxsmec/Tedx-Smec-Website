@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Image as ImageIcon, Users } from "lucide-react";
-import TeamSection from "./TeamSection"; 
+import TeamSection from "./TeamSection";
+import RotatingText from "./RotatingText"; 
 
 export default function CommunitySection() {
   return (
@@ -36,13 +37,7 @@ export default function CommunitySection() {
               </div>
               
               {/* Heading - Resized for better readability */}
-                <h2 className="heading-section mb-4">
-                  Of the Students,<br />
-                  By the Students,<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">
-                      For the Students.
-                  </span>
-              </h2>
+                <RotatingText />
               
               {/* Description - Improved readability with max-width */}
                 <div className="space-y-3 text-gray-400 text-sm sm:text-base leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">

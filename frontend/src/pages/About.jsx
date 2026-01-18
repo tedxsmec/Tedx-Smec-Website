@@ -280,7 +280,7 @@ export default function About() {
                    <img 
                      src={leader.image} 
                      alt={leader.name}
-                     className="w-full h-full object-cover object-top filter grayscale group-hover:grayscale-0 transition-all duration-700"
+                     className="w-full h-full object-cover object-top filter transition-all duration-700 group-hover:scale-105"
                      onError={(e) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${leader.name.replace(' ', '+')}&background=111&color=fff&size=512`}
                    />
                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />

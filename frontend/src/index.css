@@ -48,6 +48,39 @@
 }
 /* ---------- TEDx additional UI helpers & animations ---------- */
 
+/* Custom Red Scrollbar */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tedx-red) #0a0a0a;
+}
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+  border-left: 1px solid #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tedx-red);
+  border-radius: 6px;
+  border: 2px solid #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff0028;
+  box-shadow: 0 0 10px rgba(211, 0, 36, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #b30020;
+}
+
 /* Animations (keep only used) */
 .fade-in { animation: fadeIn 700ms ease both; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -172,4 +205,37 @@
 
 .animate-scale-in {
   animation: scale-in 0.5s ease-out forwards;
+}
+
+/* ========================================
+   CUSTOM CURSOR STYLES
+   ======================================== */
+
+/* Hide default cursor on desktop */
+@media (hover: hover) and (pointer: fine) {
+  body,
+  body * {
+    cursor: none !important;
+  }
+}
+
+/* Canvas cursor container */
+.custom-cursor-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Mobile: show default cursor */
+@media (hover: none) or (pointer: coarse) {
+  .custom-cursor-canvas {
+    display: none;
+  }
+  
+  body,
+  body * {
+    cursor: auto !important;
+  }
 }

@@ -114,6 +114,8 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Preloader from "./components/Preloader";
+import CustomCursor from "./components/CustomCursor";
+import ScrollProgressBar from "./components/ScrollProgressBar";
 import Lenis from "lenis";
 
 export default function App() {
@@ -188,6 +190,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-tedx-red/30">
+      <ScrollProgressBar />
+      <CustomCursor />
       <Navbar onNavigate={handleNavigate} id="navbar" />
 
       <main>
