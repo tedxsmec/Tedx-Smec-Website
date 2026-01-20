@@ -111,10 +111,10 @@ export default function ContactPage() {
              <h3 className="text-xl font-bold text-white">Follow Us On Socials</h3>
              <div className="flex gap-4">
                 {[
-                  { Icon: Instagram, link: "#", color: "hover:text-pink-500" },
-                  { Icon: Facebook, link: "#", color: "hover:text-blue-500" },
-                  { Icon: Twitter, link: "#", color: "hover:text-sky-500" },
-                  { Icon: Linkedin, link: "#", color: "hover:text-blue-400" }
+                  { Icon: Instagram, link: "https://www.instagram.com/tedx.smec", color: "hover:text-pink-500" },
+                  { Icon: Facebook, link: "https://www.facebook.com/profile.php?id=61584843001664", color: "hover:text-blue-500" },
+                  { Icon: Twitter, link: "https://x.com/TSmec82752", color: "hover:text-sky-500" },
+                  { Icon: Linkedin, link: "https://www.linkedin.com/company/tedxsmec", color: "hover:text-blue-400" }
                 ].map((social, i) => (
                     <a 
                         key={i} 

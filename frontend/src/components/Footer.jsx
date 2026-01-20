@@ -44,9 +44,18 @@ export default function Footer() {
 
           {/* BRAND */}
           <div>
-            <h3 className="text-2xl font-bold text-red-600 mb-4">
-              TED<span className="text-red-600">x</span>SMEC
-            </h3>
+            <Link to="/" className="flex flex-col group select-none mb-4">
+              <div className="flex items-baseline leading-none">
+                <div>
+                  <span className="text-[#E62B1E] font-black text-3xl md:text-3xl tracking-tighter">TED </span>
+                </div>
+                <span className="text-[#E62B1E] font-bold text-2xl md:text-2xl relative -top-2 mx-[1px]">x</span>
+                <span className="text-white font-black text-3xl md:text-3xl tracking-tight ml-1">SMEC</span>
+              </div>
+              <div className="text-white/60 text-[9px] font-medium tracking-wide mt-1">
+                <span className="text-[#E62B1E] font-bold">x</span> = independently organized TED event
+              </div>
+            </Link>
             <p className="text-gray-400 mb-4 leading-relaxed">
               A platform for ideas worth spreading. Join us in exploring
               innovation and creativity.
@@ -125,7 +134,7 @@ export default function Footer() {
                   href="tel:+911234567890"
                   className="text-sm hover:text-red-600"
                 >
-                  +91 123 456 7890
+                  +91 87907 64265
                 </a>
               </li>
 
