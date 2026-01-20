@@ -79,7 +79,7 @@ export default function SpeakersPage() {
   );
 
   return (
-    <div className="bg-black min-h-screen text-white font-sans selection:bg-red-600 selection:text-white">
+    <div className="bg-black min-h-screen text-white font-sans selection:bg-red-600 selection:text-white overflow-x-hidden">
       
       {/* 1. HERO HEADER */}
       <section className="relative pt-28 pb-16 px-6 text-center border-b border-white/5">
@@ -109,91 +109,94 @@ export default function SpeakersPage() {
         </div>
       </section>
 
-      {/* 2. THE SPOTLIGHT LIST (Zig-Zag) */}
-      <div className="relative">
+      {/* 2. THE SPOTLIGHT LIST (Refined Zig-Zag) */}
+      <div className="relative max-w-7xl mx-auto px-6 py-12 md:py-16">
         {loading ? (
           <div className="h-64 flex items-center justify-center text-red-600 font-bold animate-pulse text-sm tracking-widest">LOADING VOICES...</div>
         ) : filtered.length === 0 ? (
           <div className="h-64 flex items-center justify-center text-gray-500">No speakers found.</div>
         ) : (
-          filtered.map((speaker, idx) => {
-            const isEven = idx % 2 === 0;
-            const img = buildImg(speaker.photo);
+          <div className="space-y-8 md:space-y-12">
+            {filtered.map((speaker, idx) => {
+              const isEven = idx % 2 === 0;
+              const img = buildImg(speaker.photo);
 
-            return (
-              <motion.div 
-                key={speaker._id || idx}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, margin: "-10%" }}
-                transition={{ duration: 0.6 }}
-                // Reduced height here: min-h-[50vh] instead of 85vh
-                className="group relative min-h-[50vh] flex flex-col md:flex-row overflow-hidden border-b border-white/5 last:border-0"
-              >
-                {/* --- IMAGE HALF --- */}
-                <div className={`relative w-full md:w-5/12 h-[40vh] md:h-auto overflow-hidden ${isEven ? 'md:order-2' : 'md:order-1'}`}>
-                  <div className="absolute inset-0 bg-red-600/10 z-10 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                  
-                  <img 
-                    src={img} 
-                    alt={speaker.name} 
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 transform group-hover:scale-105"
-                    onError={(e) => e.currentTarget.src = "https://placehold.co/800x1000/111/444?text=TEDx"}
-                  />
-                  
-                  {/* Mobile Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent md:hidden" />
-                </div>
+              return (
+                <motion.div 
+                  key={speaker._id || idx}
+                  initial={{ opacity: 0.9, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "0%", amount: 0.2 }}
+                  transition={{ 
+                    duration: 0.4,
+                    ease: "easeOut"
+                  }}
+                  className="group relative h-auto md:h-[480px] flex flex-col md:flex-row overflow-hidden rounded-2xl md:rounded-3xl border border-white/5 hover:border-red-600/20 bg-neutral-900/30 backdrop-blur-sm transition-all duration-500 hover:shadow-[0_0_40px_rgba(230,43,30,0.15)]"
+                >
+                  {/* --- IMAGE HALF --- */}
+                  <div className={`relative w-full md:w-[45%] h-[320px] md:h-full overflow-hidden ${isEven ? 'md:order-2' : 'md:order-1'}`}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    
+                    <img 
+                      src={img} 
+                      alt={speaker.name} 
+                      className="w-full h-full object-cover transition-all duration-700 transform group-hover:scale-110"
+                      onError={(e) => e.currentTarget.src = "https://placehold.co/800x1000/111/444?text=TEDx"}
+                    />
+                    
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+                    
+                    {/* Decorative Number */}
+                    <span className="absolute bottom-4 left-4 md:bottom-6 md:left-6 text-7xl md:text-8xl font-black text-white/10 select-none leading-none">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                  </div>
 
-                {/* --- CONTENT HALF --- */}
-                <div className={`w-full md:w-7/12 flex flex-col justify-center p-8 md:p-12 lg:p-16 relative z-20 ${isEven ? 'md:order-1' : 'md:order-2'}`}>
-                  
-                  {/* Decorative Number - Smaller & Subtler */}
-                  <span className="absolute top-6 md:top-10 text-6xl font-black text-white/5 select-none">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
+                  {/* --- CONTENT HALF --- */}
+                  <div className={`w-full md:w-[55%] flex flex-col justify-center p-8 md:p-10 lg:p-14 relative ${isEven ? 'md:order-1' : 'md:order-2'}`}>
+                    
+                    <div className="space-y-5 relative">
+                      {/* Talk Topic Tag */}
+                      {speaker.talkTopic && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-red-600/30 rounded-full bg-red-900/10 text-red-500 text-[10px] font-bold uppercase tracking-widest w-fit">
+                          <Mic2 size={12} />
+                          {speaker.talkTopic}
+                        </div>
+                      )}
 
-                  <div className="space-y-4 relative">
-                    {/* Talk Topic Tag */}
-                    {speaker.talkTopic && (
-                      <div className="inline-flex items-center gap-2 px-2.5 py-0.5 border border-red-600/30 rounded-full bg-red-900/10 text-red-500 text-[10px] font-bold uppercase tracking-widest w-fit">
-                        <Mic2 size={10} />
-                        {speaker.talkTopic}
+                      {/* Name & Title */}
+                      <div>
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-[1.1] mb-3 group-hover:text-red-600 transition-colors duration-500">
+                          {speaker.name}
+                        </h2>
+                        <p className="text-base md:text-lg text-gray-400 font-medium border-l-4 border-red-600 pl-4">
+                          {speaker.designation}
+                        </p>
                       </div>
-                    )}
 
-                    {/* Name & Title */}
-                    <div>
-                      {/* Reduced text size here */}
-                      <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-2 group-hover:text-red-600 transition-colors duration-500">
-                        {speaker.name}
-                      </h2>
-                      <p className="text-lg text-gray-400 font-medium italic border-l-2 border-red-600 pl-3">
-                        {speaker.designation}
+                      {/* Short Bio */}
+                      <p className="text-gray-400 text-sm md:text-base leading-relaxed line-clamp-3 max-w-2xl">
+                        {speaker.bio || "A visionary thinker sharing ideas that matter."}
                       </p>
-                    </div>
 
-                    {/* Short Bio */}
-                    <p className="text-gray-400 text-base leading-relaxed line-clamp-2 max-w-xl">
-                      {speaker.bio || "A visionary thinker sharing ideas that matter."}
-                    </p>
-
-                    {/* CTA Button */}
-                    <div className="pt-2">
-                      <button 
-                        onClick={() => navigate(`/speakers/${speaker.slug || speaker._id}`)}
-                        className="inline-flex items-center gap-2 text-white font-bold uppercase tracking-widest text-xs hover:gap-3 transition-all duration-300 group/btn"
-                      >
-                        <span className="border-b border-transparent group-hover/btn:border-red-600">Read Profile</span>
-                        <ArrowRight className="text-red-600" size={16} />
-                      </button>
+                      {/* CTA Button */}
+                      <div className="pt-3">
+                        <button 
+                          onClick={() => navigate(`/speakers/${speaker.slug || speaker._id}`)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-red-600/10 border border-red-600/30 rounded-full text-white font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 hover:border-red-600 transition-all duration-300 group/btn"
+                        >
+                          <span>View Profile</span>
+                          <ArrowRight className="group-hover/btn:translate-x-1 transition-transform" size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-              </motion.div>
-            );
-          })
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

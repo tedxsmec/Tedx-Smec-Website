@@ -92,7 +92,7 @@ export default function SpeakerProfile() {
                 <img 
                   src={imgSrc} 
                   alt={speaker.name} 
-                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  className="w-full h-full object-cover transition-all duration-700"
                   onError={(e) => e.currentTarget.src = "https://placehold.co/600x800/111/444?text=Speaker"}
                 />
               </motion.div>

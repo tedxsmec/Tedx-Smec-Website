@@ -59,7 +59,7 @@ const MagneticSpeakerCard = ({ speaker, onCardClick }) => {
           alt={speaker.name}
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90" />
         {/* Subtle shine on hover */}
