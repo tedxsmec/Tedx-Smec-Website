@@ -2,12 +2,13 @@
 const mongoose = require('mongoose');
 
 const MediaSchema = new mongoose.Schema({
-  type: { type: String, enum: ['image', 'video'], required: true },
+  type: { type: String, enum: ['image', 'video', 'instagram'], required: true },
   title: { type: String, default: '' },
   description: { type: String, default: '' },
 
   // for images: store file path relative to server root (e.g. 'uploads/xxx.jpg')
   // for videos: store normalized video URL (youtube watch url)
+  // for instagram: store Instagram post/reel URL
   url: { type: String, default: '' },
 
   // original filename (optional)

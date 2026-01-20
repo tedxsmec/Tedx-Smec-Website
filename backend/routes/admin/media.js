@@ -130,10 +130,15 @@ router.post('/', upload.single('file'), async (req, res) => {
       return mediaCtrl.createVideo(req, res);
     }
 
+    // INSTAGRAM (Post/Reel)
+    if (req.body?.type === 'instagram' && req.body?.url) {
+      return mediaCtrl.createInstagram(req, res);
+    }
+
     return res.status(400).json({
       success: false,
       message:
-        'Invalid create request. Use multipart/form-data for images (field "file") OR JSON { type: "video", url }',
+        'Invalid create request. Use multipart/form-data for images (field "file") OR JSON { type: "video", url } OR JSON { type: "instagram", url }',
     });
   } catch (err) {
     console.error('POST /admin/media upload error', err);
