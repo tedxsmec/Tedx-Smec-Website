@@ -494,7 +494,7 @@ app.get('/health', (_, res) => res.status(200).send('OK'));
 //   credentials: true
 // }));
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173,http://localhost:5174")
   .split(",")
   .map(o => o.trim())
   .filter(Boolean);

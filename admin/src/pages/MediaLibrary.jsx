@@ -20,6 +20,13 @@ function extractYouTubeId(url) {
   return m ? m[1] : null;
 }
 
+function extractInstagramId(url) {
+  if (!url) return null;
+  const re = /instagram\.com\/(p|reel)\/([A-Za-z0-9_-]+)/;
+  const m = url.match(re);
+  return m ? m[2] : null;
+}
+
 // resolve relative paths returned by your API
 function baseRoot(p) {
   if (!p) return null;
@@ -47,6 +54,11 @@ export default function MediaLibrary() {
   const [videoLinksText, setVideoLinksText] = useState(''); // newline separated links
   const [videoTitle, setVideoTitle] = useState(''); // default title
   const [videoDesc, setVideoDesc] = useState('');
+
+  // instagram form (supports multiple links, one per line)
+  const [instagramLinksText, setInstagramLinksText] = useState('');
+  const [instagramTitle, setInstagramTitle] = useState('');
+  const [instagramDesc, setInstagramDesc] = useState('');
 
   // edit
   const [editing, setEditing] = useState(null);
@@ -178,6 +190,53 @@ export default function MediaLibrary() {
     } finally { setBusy(false); }
   }
 
+  // Add multiple Instagram links (one per line)
+  async function addInstagramPosts(e) {
+    e?.preventDefault();
+    const lines = (instagramLinksText || '').split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) { alert('Paste one or more Instagram links (one per line)'); return; }
+
+    setBusy(true);
+    try {
+      const createdIds = [];
+      for (const line of lines) {
+        const igId = extractInstagramId(line);
+        if (!igId) {
+          console.warn('skipping invalid instagram link:', line);
+          continue;
+        }
+        const payload = { type: 'instagram', title: instagramTitle || '', description: instagramDesc || '', url: line };
+        const res = await api.post('/admin/media', payload);
+        const created = res.data?.data || res.data;
+        let createdItem = null;
+        if (Array.isArray(created)) createdItem = created[0] || null;
+        else if (created && typeof created === 'object') createdItem = created;
+        if (createdItem) createdIds.push(String(createdItem._id || createdItem.id));
+      }
+
+      // optionally map newly created instagram posts to event
+      if (mapOnUpload && eventId && createdIds.length) {
+        for (const mid of createdIds) {
+          try {
+            await api.post(`/admin/events/${eventId}/add-media`, { mediaId: mid });
+          } catch (err) {
+            console.warn('map after add instagram failed for', mid, err?.response?.data || err.message || err);
+          }
+        }
+      }
+
+      setInstagramLinksText('');
+      setInstagramTitle('');
+      setInstagramDesc('');
+      await loadAll();
+      if (eventId) await loadEventMediaIds();
+      alert('Instagram posts added');
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || err.message || 'Add failed');
+    } finally { setBusy(false); }
+  }
+
   function startEdit(item) {
     setEditing(item);
     setEditingTitle(item.title || '');
@@ -240,6 +299,7 @@ export default function MediaLibrary() {
   // separate images and videos (fallback: infer from url/type)
   const images = items.filter(it => (it.type === 'image') || (!it.type && (it.url || '').match(/\.(jpe?g|png|gif|webp|svg)$/i)));
   const videos = items.filter(it => (it.type === 'video') || (!it.type && extractYouTubeId(it.url || (it.path || ''))));
+  const instagrams = items.filter(it => it.type === 'instagram' || extractInstagramId(it.url || ''));
 
   // helper to produce display thumbnail for an item
   function thumbUrl(it) {
@@ -248,6 +308,9 @@ export default function MediaLibrary() {
       const id = extractYouTubeId(it.url || '');
       if (!id) return null;
       return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    }
+    if (it.type === 'instagram' || extractInstagramId(it.url || '')) {
+      return 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=200';
     }
     // image: use url or common fields
     const candidate = it.url || it.path || it.src || it.file || it.filename || it.storagePath;
@@ -348,6 +411,43 @@ export default function MediaLibrary() {
             <button type="button" className="ml-btn-outline" onClick={() => { setVideoLinksText(''); setVideoTitle(''); setVideoDesc(''); }}>Clear</button>
           </div>
         </form>
+
+        {/* Instagram add (multiple links) */}
+        <form className="ml-card" onSubmit={addInstagramPosts}>
+          <div className="ml-card-head">Add Instagram Links (multiple)</div>
+
+          <textarea
+            className="ml-input"
+            placeholder="Paste one Instagram post/reel link per line"
+            value={instagramLinksText}
+            onChange={e => setInstagramLinksText(e.target.value)}
+            style={{ minHeight: 100 }}
+          />
+          <input
+            className="ml-input"
+            placeholder="Default title for these posts (optional)"
+            value={instagramTitle}
+            onChange={e => setInstagramTitle(e.target.value)}
+          />
+          <input
+            className="ml-input"
+            placeholder="Default description (optional)"
+            value={instagramDesc}
+            onChange={e => setInstagramDesc(e.target.value)}
+          />
+
+          {eventId && (
+            <label style={{ display: 'block', marginBottom: 8 }}>
+              <input type="checkbox" checked={mapOnUpload} onChange={e => setMapOnUpload(e.target.checked)} />{' '}
+              Map added posts to event (eventId={eventId})
+            </label>
+          )}
+
+          <div className="ml-actions-row">
+            <button className="ml-btn-primary" disabled={busy}>{busy ? 'Working…' : 'Add Instagram Post(s)'}</button>
+            <button type="button" className="ml-btn-outline" onClick={() => { setInstagramLinksText(''); setInstagramTitle(''); setInstagramDesc(''); }}>Clear</button>
+          </div>
+        </form>
       </div>
 
       {editing && (
@@ -409,6 +509,38 @@ export default function MediaLibrary() {
 
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>{it.title || 'Untitled video'}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{it.description || it.url}</div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="ml-btn-outline" onClick={() => window.open(it.url, '_blank')}>Open</button>
+                    <button className="ml-btn-outline" onClick={() => startEdit(it)}>Edit</button>
+                    <button className="ml-btn-outline" onClick={() => deleteMedia(it)}>Delete</button>
+                    {eventId && <button className="ml-btn-primary" onClick={() => toggleMap(it)} disabled={busy}>{eventMediaIds.has(String(it._id || it.id)) ? 'Unmap' : 'Map'}</button>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="ml-card" style={{ marginTop: 12 }}>
+        <div className="ml-card-head">Instagram Posts ({instagrams.length})</div>
+
+        {loading ? <div className="ml-muted">Loading…</div> : instagrams.length === 0 ? <div className="ml-muted">No Instagram posts yet.</div> : (
+          <div className="ml-list">
+            {instagrams.map(it => {
+              const igId = extractInstagramId(it.url || '') || null;
+              const t = thumbUrl(it);
+              return (
+                <div key={String(it._id || it.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ width: 140, height: 78, background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)', borderRadius: 6, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {t ? <img src={t} alt={it.title || 'instagram'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ fontSize: 12, color: 'white', fontWeight: 700 }}>IG</div>}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700 }}>{it.title || 'Instagram Post'}</div>
                     <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{it.description || it.url}</div>
                   </div>
 
