@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 export default function CustomCursor() {
   const canvasRef = useRef(null);
-  const [isPointer, setIsPointer] = useState(false);
-  const [isHidden, setIsHidden] = useState(false);
-  const [isClicked, setIsClicked] = useState(false);
+  const isPointerRef = useRef(false);
+  const isHiddenRef = useRef(false);
+  const isClickedRef = useRef(false);
   const echoSegments = useRef([]);
   const mouse = useRef({ 
     x: 0, 
@@ -88,12 +88,12 @@ export default function CustomCursor() {
         target.getAttribute('role') === 'button' ||
         window.getComputedStyle(target).cursor === 'pointer';
 
-      setIsPointer(isClickable);
+      isPointerRef.current = isClickable;
     };
 
     // Click handler for echo effect
     const handleMouseDown = (e) => {
-      setIsClicked(true);
+      isClickedRef.current = true;
       
       // Create echo segments in an X pattern
       const angles = [
@@ -107,11 +107,11 @@ export default function CustomCursor() {
         echoSegments.current.push(new EchoSegment(e.clientX, e.clientY, angle));
       });
 
-      setTimeout(() => setIsClicked(false), 300);
+      setTimeout(() => { isClickedRef.current = false; }, 300);
     };
 
-    const handleMouseEnter = () => setIsHidden(false);
-    const handleMouseLeave = () => setIsHidden(true);
+    const handleMouseEnter = () => { isHiddenRef.current = false; };
+    const handleMouseLeave = () => { isHiddenRef.current = true; };
 
     const handleResize = () => {
       canvas.width = window.innerWidth;
@@ -131,15 +131,15 @@ export default function CustomCursor() {
       const time = Date.now() * 0.001;
 
       // Morph progress based on hover state
-      if (isPointer && morphProgress.current < 1) {
+      if (isPointerRef.current && morphProgress.current < 1) {
         morphProgress.current += 0.08;
-      } else if (!isPointer && morphProgress.current > 0) {
+      } else if (!isPointerRef.current && morphProgress.current > 0) {
         morphProgress.current -= 0.08;
       }
       morphProgress.current = Math.max(0, Math.min(1, morphProgress.current));
 
       ctx.save();
-      ctx.globalAlpha = isHidden ? 0 : 1;
+      ctx.globalAlpha = isHiddenRef.current ? 0 : 1;
 
       // Glow effect - subtle and refined
       ctx.shadowBlur = 12;
@@ -249,7 +249,7 @@ export default function CustomCursor() {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [isPointer, isHidden]);
+  }, []);
 
   return (
     <canvas

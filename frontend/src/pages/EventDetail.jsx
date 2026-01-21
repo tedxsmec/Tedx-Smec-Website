@@ -109,16 +109,17 @@ export default function EventDetail() {
     <div className="bg-black min-h-screen text-white pb-24">
 
       {/* HERO */}
-      <div className="relative h-[65vh] overflow-hidden">
+      <div className="relative h-[70vh] overflow-hidden">
         {banner ? (
           <img
             src={banner}
             alt={event.name}
+            loading="eager"
             onError={(e) => {
               e.currentTarget.src =
                 "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&w=1200&q=80";
             }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover brightness-125"
           />
         ) : (
           <div className="absolute inset-0 bg-neutral-900 flex items-center justify-center text-gray-500">
@@ -126,28 +127,28 @@ export default function EventDetail() {
           </div>
         )}
 
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/80" />
 
         <button
           onClick={() => navigate("/events")}
-          className="absolute top-24 left-6 flex items-center gap-2 px-4 py-2 bg-black/50 rounded-full border border-white/10 hover:bg-red-600 transition"
+          className="absolute top-24 left-6 z-20 flex items-center gap-2 px-4 py-2 bg-black/60 rounded-full border border-white/20 hover:bg-red-600 hover:border-red-600 transition"
         >
           <ArrowLeft size={16} /> Back
         </button>
 
-        <div className="absolute bottom-0 p-8 max-w-6xl">
-          <h1 className="text-5xl md:text-6xl font-black mb-4">
+        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 z-10 max-w-full">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4 text-red-600 drop-shadow-lg">
             {event.name}
           </h1>
-          <div className="flex flex-wrap gap-6 text-gray-300">
-            <span className="flex gap-2">
-              <Calendar /> {new Date(event.date).toDateString()}
+          <div className="flex flex-col md:flex-row flex-wrap gap-6 text-white drop-shadow-md">
+            <span className="flex items-center gap-2">
+              <Calendar size={20} /> {new Date(event.date).toDateString()}
             </span>
-            <span className="flex gap-2">
-              <Clock /> {new Date(event.date).toLocaleTimeString()}
+            <span className="flex items-center gap-2">
+              <Clock size={20} /> {new Date(event.date).toLocaleTimeString()}
             </span>
-            <span className="flex gap-2">
-              <MapPin /> {resolveVenue(event)}
+            <span className="flex items-center gap-2">
+              <MapPin size={20} /> {resolveVenue(event)}
             </span>
           </div>
         </div>

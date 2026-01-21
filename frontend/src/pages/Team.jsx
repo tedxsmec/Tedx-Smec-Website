@@ -149,26 +149,29 @@ export default function TeamPage() {
 
 function TeamCard({ member, type, showSocials }) {
   const isFaculty = type === "faculty";
+  const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <div className="group relative h-[400px] md:h-[450px] bg-neutral-900 rounded-2xl overflow-hidden border border-white/5 
-                    hover:border-red-600/40 hover:-translate-y-2 transition-all duration-500 
-                    flex flex-col justify-end items-center mx-auto w-full shadow-lg">
+                    hover:border-red-600/40 transition-colors duration-500 
+                    flex flex-col justify-end items-center mx-auto w-full shadow-lg"
+         onMouseEnter={() => setIsHovered(true)}
+         onMouseLeave={() => setIsHovered(false)}>
       
       <img
         src={buildImg(member.photo)}
         alt={member.name}
-        className="absolute inset-0 w-full h-full object-cover transition duration-700"
+        className="absolute inset-0 w-full h-full object-cover"
       />
       
       {/* Dark gradient for text legibility */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
       
-      {showSocials && <SocialOverlay member={member} />}
+      {showSocials && <SocialOverlay member={member} isHovered={isHovered} />}
 
       <div className="relative z-10 w-full p-5 md:p-6 bg-gradient-to-t from-black/95 to-transparent pt-12">
         {/* Centered Bar - Fixed Vertical Level */}
-        <div className="h-1 w-10 md:w-12 bg-red-600 mx-auto mb-4 group-hover:w-20 md:group-hover:w-24 transition-all duration-500" />
+        <div className={`h-1 bg-red-600 mx-auto mb-4 transition-[width] duration-500 ${isHovered ? 'w-20 md:w-24' : 'w-10 md:w-12'}`} />
         
         <h3 className="text-lg md:text-xl font-black text-white leading-tight uppercase tracking-tighter">
           {member.name}
@@ -202,7 +205,7 @@ function SectionHeader({ index, title }) {
   );
 }
 
-function SocialOverlay({ member }) {
+function SocialOverlay({ member, isHovered }) {
   const s = {
     linkedin: member.linkedin || member.linkedinUrl || null,
     instagram: member.twitter || member.twitterUrl || member.x || null,
@@ -211,9 +214,10 @@ function SocialOverlay({ member }) {
   };
 
   return (
-    <div className="absolute top-3 right-3 md:top-4 md:right-4 flex flex-col gap-2 z-20 
-                    opacity-100 md:opacity-0 md:group-hover:opacity-100 
-                    transition-all duration-300">
+    <div className={`absolute top-3 right-3 md:top-4 md:right-4 flex flex-col gap-2 z-20 
+                    transition-opacity duration-300 ${
+                      isHovered ? 'opacity-100' : 'opacity-100 md:opacity-0'
+                    }`}>
       {s.linkedin && <SocialBtn href={s.linkedin} icon={<Linkedin size={14} className="md:w-4 md:h-4"/>}/>}
       {s.instagram && <SocialBtn href={s.instagram} icon={<Instagram size={14} className="md:w-4 md:h-4"/>}/>}
       {s.twitter && <SocialBtn href={s.twitter} icon={<Twitter size={14} className="md:w-4 md:h-4"/>}/>}

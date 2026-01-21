@@ -82,18 +82,19 @@ export default function Sponsors() {
 
         {/* SPONSORS GRID */}
         {!loading && !error && sponsors.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 pb-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 pb-20">
             {sponsors.map((sp) => (
               <div
                 key={sp._id || sp.id}
                 className="group bg-neutral-900/80 border border-white/10 rounded-xl
-                           p-6 flex items-center justify-center
-                           hover:border-red-600/50 transition-all"
+                           flex items-center justify-center
+                           hover:border-red-600/50 hover:bg-neutral-900 transition-all
+                           h-48 md:h-56"
               >
                 <img
                   src={buildImg(sp.logo || sp.logoUrl)}
                   alt={sp.name || "Sponsor"}
-                  className="max-h-20 object-contain opacity-80 group-hover:opacity-100 transition"
+                  className="h-full w-full object-contain opacity-90 group-hover:opacity-100 transition"
                   onError={(e) => {
                     e.currentTarget.src =
                       "https://placehold.co/160x80/111111/ffffff?text=Sponsor";

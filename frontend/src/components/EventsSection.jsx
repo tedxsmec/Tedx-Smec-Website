@@ -6,16 +6,19 @@ import { Link } from "react-router-dom";
 // Content pulled from your single-event focus
 const MAIN_EVENT = {
   name: "Echoes of Innovation",
-  date: "March 20, 2026",
-  time: "10:00 AM - 05:00 PM",
-  venue: "Grand Auditorium, SMEC",
+  date: "Feb 04, 2026",
+  time: "10:00 AM - 4:00 PM",
+  venue: "St. Martin's Engineering College, Dhullapally",
   description: "A transformative journey through the reverberations of past breakthroughs and their impact on our future. Join us for a day of ideas that don't just speak—they resonate.",
   image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=1000",
   agenda: [
-    { time: "10:00 AM", title: "Opening: The First Echo", desc: "Introductory remarks and performance." },
-    { time: "11:30 AM", title: "Session I: Neural Networks", desc: "Exploring the connectivity of modern ideas." },
-    { time: "02:00 PM", title: "Session II: Future Silence", desc: "The impact of technology on human connection." },
-    { time: "04:30 PM", title: "Closing: The Final Resonance", desc: "Concluding thoughts and networking." }
+    { time: "08:45 AM", title: "Registration & Seating", desc: "Pre-event setup and attendee check-in." },
+    { time: "10:00 AM", title: "Inaugural & Opening Ceremony", desc: "Welcome address and event inauguration." },
+    { time: "11:00 AM", title: "Speaker Session 1", desc: "First keynote presentation." },
+    { time: "01:00 PM", title: "Lunch Break & Networking", desc: "Time to connect and recharge." },
+    { time: "02:00 PM", title: "Live Band Music Performance", desc: "Energizing afternoon musical performance." },
+    { time: "02:40 PM", title: "Speaker Session 2", desc: "Afternoon keynote presentations." },
+    { time: "04:00 PM", title: "Closing Ceremony & Vote of Thanks", desc: "Concluding remarks and gratitude." }
   ]
 };
 

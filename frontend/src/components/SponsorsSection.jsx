@@ -92,7 +92,7 @@ export default function SponsorsSection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="sponsor-item relative flex items-center justify-center
-                           w-48 h-28 md:w-64 md:h-36
+                           w-56 h-32 md:w-80 md:h-44
                            bg-white/30 backdrop-blur-sm
                            border border-white/10 rounded-xl
                            hover:border-red-600/50 hover:bg-white/50
@@ -102,7 +102,7 @@ export default function SponsorsSection() {
                 <img
                   src={imgSrc}
                   alt={sp.name}
-                  className="max-h-12 md:max-h-16 max-w-[75%] object-contain
+                  className="h-full w-full object-contain
                              brightness-110 drop-shadow-lg"
                 />
                 <div className="absolute bottom-2 text-[9px] font-bold uppercase tracking-wider text-white/40">
@@ -113,14 +113,14 @@ export default function SponsorsSection() {
               <div
                 key={sp.__loopKey}
                 className="sponsor-item relative flex items-center justify-center
-                           w-48 h-28 md:w-64 md:h-36
+                           w-56 h-32 md:w-80 md:h-44
                            bg-white/30 backdrop-blur-sm
                            border border-white/10 rounded-xl"
               >
                 <img
                   src={imgSrc}
                   alt={sp.name}
-                  className="max-h-12 md:max-h-16 max-w-[75%] object-contain brightness-110"
+                  className="h-full w-full object-contain brightness-110"
                 />
                 <div className="absolute bottom-2 text-[9px] font-bold uppercase tracking-wider text-white/40">
                   {sp.category || "Partner"}
@@ -147,7 +147,7 @@ export default function SponsorsSection() {
       {/* ANIMATION */}
       <style>{`
         .sponsor-track {
-          animation: marquee 50s linear infinite;
+          animation: marquee 20s linear infinite;
         }
         .group:hover .sponsor-track {
           animation-play-state: paused;
@@ -158,7 +158,7 @@ export default function SponsorsSection() {
         }
         @media (max-width: 768px) {
           .sponsor-track {
-            animation-duration: 25s;
+            animation-duration: 15s;
           }
         }
       `}</style>
