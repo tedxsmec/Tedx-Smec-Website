@@ -2,49 +2,41 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { buildImg } from "../utils";
-
-// ─── FALLBACK (ONLY IF API FAILS) ─────────────────────────────
-const DUMMY_SPONSORS = [
-  {
-    _id: "spon-1",
-    name: "TechVision",
-    category: "Title Sponsor",
-    logo:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/2560px-Google_2015_logo.svg.png",
-    website: "https://google.com",
-  },
-];
+import { SponsorLogoSkeleton } from "./Skeleton";
+import ConnectionError from "./ConnectionError";
 
 export default function SponsorsSection() {
   const [sponsors, setSponsors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   // ─── LOAD ALL SPONSORS ──────────────────────────────────────
-  useEffect(() => {
-    let mounted = true;
+  const loadSponsors = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await api.get("/admin/sponsors/public/list");
+      const data = res?.data?.success ? res.data.data : res.data;
 
-    const loadSponsors = async () => {
-      try {
-        const res = await api.get("/admin/sponsors/public/list");
-        const data = res?.data?.success ? res.data.data : res.data;
-
-        // ✅ TAKE EVERYTHING BACKEND SENDS
-        if (mounted && Array.isArray(data)) {
-          setSponsors(data);
-        }
-      } catch (err) {
-        console.warn("Sponsors API failed, using fallback");
-        if (mounted) setSponsors(DUMMY_SPONSORS);
-      } finally {
-        if (mounted) setLoading(false);
+      // ✅ TAKE EVERYTHING BACKEND SENDS
+      if (Array.isArray(data) && data.length > 0) {
+        setSponsors(data);
+      } else {
+        throw new Error('No sponsors available');
       }
-    };
+    } catch (err) {
+      console.warn("Sponsors API failed", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadSponsors();
-    return () => (mounted = false);
   }, []);
 
-  // ─── DUPLICATE FOR CONTINUOUS MARQUEE ───────────────────────
+  // ─── DUPLICATE FOR CONTINUOUS MARQUEE ───────────────────────────────────
   const loopList = useMemo(() => {
     if (!sponsors.length) return [];
 
@@ -57,7 +49,37 @@ export default function SponsorsSection() {
     );
   }, [sponsors]);
 
-  if (loading || !sponsors.length) return null;
+  if (loading) {
+    return (
+      <section className="relative py-20 bg-black overflow-hidden border-t border-white/10">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 mb-12 text-center">
+          <span className="text-red-500 font-bold tracking-[0.2em] uppercase text-xs block mb-3">
+            Our Supporters
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            Partners in <span className="text-red-500">Innovation</span>
+          </h2>
+        </div>
+        <div className="flex gap-8 justify-center items-center py-12">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SponsorLogoSkeleton key={i} />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="relative py-20 bg-black overflow-hidden border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <ConnectionError onRetry={loadSponsors} message="Unable to Load Sponsors" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!sponsors.length) return null;
 
   return (
     <section

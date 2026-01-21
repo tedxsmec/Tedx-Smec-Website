@@ -4,6 +4,8 @@ import { X, Linkedin, Twitter, Instagram, ChevronLeft, ChevronRight, ArrowRight,
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { buildImg } from "../utils";
+import { SpeakerCardSkeleton } from "./Skeleton";
+import ConnectionError from "./ConnectionError";
 
 // --- 1. MAGNETIC CARD COMPONENT WITH SOCIAL HOVER ---
 const MagneticSpeakerCard = ({ speaker, onCardClick }) => {
@@ -220,22 +222,27 @@ export default function SpeakersSection() {
     };
   }, [selectedSpeaker]);
 
-  // Full Dummy Data Set
-  const DUMMY_DATA = [
-    { id: "dummy-1", name: "Virat Kohli", designation: "Athlete & Leader", photo: "https://upload.wikimedia.org/wikipedia/commons/e/ef/Virat_Kohli_during_the_India_vs_Aus_4th_Test_match_at_Narendra_Modi_Stadium_on_09_March_2023.jpg", linkedin: "#", instagram: "#", bio: "Legendary athlete exploring the grit required for high-performance innovation." },
-    { id: "dummy-2", name: "Anjali Sharma", designation: "Tech Visionary", photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600", twitter: "#", bio: "Leading AI research that bridges the gap between technology and human empathy." },
-    { id: "dummy-3", name: "Vikram Singh", designation: "Eco Innovator", photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600", linkedin: "#", bio: "Redesigning urban ecosystems to reverberate with sustainability." },
-    { id: "dummy-4", name: "Sneha Reddy", designation: "Curator", photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=600", instagram: "#", bio: "Finding the hidden stories that spark global conversations." }
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchSpeakers = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await api.get("/admin/speakers/public/list");
+      if (res.data?.success && res.data.data.length > 0) {
+        setSpeakers(res.data.data);
+      } else {
+        throw new Error('No speakers available');
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSpeakers = async () => {
-      try {
-        const res = await api.get("/admin/speakers/public/list");
-        if (res.data?.success && res.data.data.length > 0) setSpeakers(res.data.data);
-        else setSpeakers(DUMMY_DATA);
-      } catch { setSpeakers(DUMMY_DATA); }
-    };
     fetchSpeakers();
   }, []);
 
@@ -318,13 +325,25 @@ export default function SpeakersSection() {
               onScroll={() => setShowHint(false)}
               onMouseDown={() => setShowHint(false)}
             >
-              {speakers.map((s, i) => (
-                <MagneticSpeakerCard
-                  key={s.id || i}
-                  speaker={s}
-                  onCardClick={() => setSelectedSpeaker(s)}
-                />
-              ))}
+              {loading ? (
+                <>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <SpeakerCardSkeleton key={i} />
+                  ))}
+                </>
+              ) : error ? (
+                <div className="w-full">
+                  <ConnectionError onRetry={fetchSpeakers} message="Unable to Load Speakers" />
+                </div>
+              ) : (
+                speakers.map((s, i) => (
+                  <MagneticSpeakerCard
+                    key={s.id || i}
+                    speaker={s}
+                    onCardClick={() => setSelectedSpeaker(s)}
+                  />
+                ))
+              )}
             </div>
           {/* Mobile swipe hint */}
           {showHint && (

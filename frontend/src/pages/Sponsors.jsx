@@ -1,53 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
 import { buildImg } from "../utils";
+import { SponsorLogoSkeleton, SkeletonGrid } from "../components/Skeleton";
+import ConnectionError from "../components/ConnectionError";
 
 export default function Sponsors() {
   const [sponsors, setSponsors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let mounted = true;
+  const fetchSponsors = async () => {
+    setLoading(true);
+    setError(null);
 
     const endpoints = [
       "/admin/sponsors/public/list", // primary
       "/sponsors",                  // fallback
     ];
 
-    const loadSponsors = async () => {
-      setLoading(true);
-      setError(null);
+    for (const ep of endpoints) {
+      try {
+        const res = await api.get(ep);
+        const data = res?.data?.success ? res.data.data : res.data;
 
-      for (const ep of endpoints) {
-        try {
-          const res = await api.get(ep);
-          const data = res?.data?.success ? res.data.data : res.data;
-
-          if (!mounted) return;
-
-          if (Array.isArray(data)) {
-            setSponsors(data);
-            setLoading(false);
-            return;
-          }
-        } catch (err) {
-          if (ep === endpoints[endpoints.length - 1]) {
-            setError(
-              err?.response?.data?.message ||
-              err.message ||
-              "Failed to load sponsors"
-            );
-            setLoading(false);
-          }
+        if (Array.isArray(data) && data.length > 0) {
+          setSponsors(data);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        if (ep === endpoints[endpoints.length - 1]) {
+          setError(
+            err?.response?.data?.message ||
+            err.message ||
+            "Failed to load sponsors"
+          );
+          setLoading(false);
         }
       }
-    };
+    }
+  };
 
-    loadSponsors();
-    return () => {
-      mounted = false;
-    };
+  useEffect(() => {
+    fetchSponsors();
   }, []);
 
   return (
@@ -61,15 +56,17 @@ export default function Sponsors() {
 
         {/* LOADING */}
         {loading && (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <SkeletonGrid 
+            count={6} 
+            ItemComponent={SponsorLogoSkeleton}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 pb-20"
+          />
         )}
 
         {/* ERROR */}
         {!loading && error && (
-          <div className="max-w-xl mx-auto bg-red-600/10 border border-red-600/30 text-red-400 text-center p-6 rounded-xl">
-            {error}
+          <div className="max-w-xl mx-auto">
+            <ConnectionError onRetry={fetchSponsors} message="Unable to Load Sponsors" />
           </div>
         )}
 

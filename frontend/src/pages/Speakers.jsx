@@ -4,72 +4,44 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Mic2, Search } from 'lucide-react';
 import { api } from '../api';
 import { buildImg } from '../utils';
-
-// --- DUMMY DATA FALLBACK ---
-const DUMMY_SPEAKERS = [
-  { 
-    _id: "s1", 
-    name: "Dr. Alok Ranjan", 
-    designation: "Neurosurgeon", 
-    photo: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=800", 
-    talkTopic: "The Brain on Music",
-    bio: "Unraveling the symphony of synapses. How melody reshapes our neural pathways."
-  },
-  { 
-    _id: "s2", 
-    name: "Sarah Jenkins", 
-    designation: "AI Ethicist", 
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800", 
-    talkTopic: "Coding Morality",
-    bio: "Can we teach machines to care? Exploring the boundaries of artificial empathy."
-  },
-  { 
-    _id: "s3", 
-    name: "Vikram Sethi", 
-    designation: "Environmental Architect", 
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800", 
-    talkTopic: "Building Breathing Cities",
-    bio: "Reimagining urban jungles as living, breathing ecosystems."
-  },
-  { 
-    _id: "s4", 
-    name: "Priya Sharma", 
-    designation: "Classical Dancer", 
-    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", 
-    talkTopic: "Rhythm of Life",
-    bio: "Finding the universal heartbeat through movement and ancient expression."
-  },
-];
+import { SpeakerCardSkeleton, SkeletonGrid } from '../components/Skeleton';
+import ConnectionError from '../components/ConnectionError';
 
 export default function SpeakersPage() {
   const [speakers, setSpeakers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSpeakers = async () => {
-      try {
-        const endpoints = ['/admin/speakers/public/list', '/speakers'];
-        let data = [];
-        
-        for (const ep of endpoints) {
-          try {
-            const res = await api.get(ep);
-            const val = res?.data?.success ? res.data.data : res.data;
-            if (Array.isArray(val) && val.length > 0) {
-              data = val;
-              break;
-            }
-          } catch (e) { continue; }
-        }
-        setSpeakers(data.length > 0 ? data : DUMMY_SPEAKERS);
-      } catch (err) {
-        setSpeakers(DUMMY_SPEAKERS);
-      } finally {
-        setLoading(false);
+  const fetchSpeakers = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const endpoints = ['/admin/speakers/public/list', '/speakers'];
+      let data = [];
+      
+      for (const ep of endpoints) {
+        try {
+          const res = await api.get(ep);
+          const val = res?.data?.success ? res.data.data : res.data;
+          if (Array.isArray(val) && val.length > 0) {
+            data = val;
+            break;
+          }
+        } catch (e) { continue; }
       }
-    };
+      
+      if (data.length === 0) throw new Error('No data available');
+      setSpeakers(data);
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSpeakers();
   }, []);
 
@@ -77,6 +49,36 @@ export default function SpeakersPage() {
     s.name.toLowerCase().includes(search.toLowerCase()) || 
     (s.designation && s.designation.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // Loading State
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white pt-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="h-12 w-64 mx-auto bg-neutral-800 animate-pulse rounded mb-4" />
+            <div className="h-6 w-96 mx-auto bg-neutral-800 animate-pulse rounded" />
+          </div>
+          <SkeletonGrid 
+            count={4} 
+            ItemComponent={SpeakerCardSkeleton}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white pt-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <ConnectionError onRetry={fetchSpeakers} message="Unable to Load Speakers" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black min-h-screen text-white font-sans selection:bg-red-600 selection:text-white overflow-x-hidden">

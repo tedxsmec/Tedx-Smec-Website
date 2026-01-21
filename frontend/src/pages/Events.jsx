@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Search, Filter, ArrowRight } from "lucide-react";
 import { api } from "../api";
 import { buildImg } from "../utils";
+import { EventCardSkeleton, SkeletonGrid } from "../components/Skeleton";
+import ConnectionError from "../components/ConnectionError";
 
 /* ───────────────── IMAGE RESOLVER ───────────────── */
 const resolveImage = (img) => {
@@ -25,71 +27,39 @@ const resolveVenue = (event) => {
   );
 };
 
-/* ───────────────── DUMMY DATA ───────────────── */
-const DUMMY_EVENTS = [
-  {
-    _id: "evt-1",
-    slug: "echoes-of-innovation",
-    name: "Echoes of Innovation",
-    date: new Date(Date.now() + 864000000).toISOString(),
-    venue: "Grand Auditorium",
-    description:
-      "Exploring how past reverberations shape our future technologies.",
-    image:
-      "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=1000",
-  },
-  {
-    _id: "evt-2",
-    slug: "sustainable-horizons",
-    name: "Sustainable Horizons",
-    date: new Date(Date.now() + 1728000000).toISOString(),
-    venue: "Green Park Center",
-    description: "A deep dive into eco-friendly architecture and living.",
-    image:
-      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80&w=1000",
-  },
-  {
-    _id: "evt-3",
-    slug: "digital-frontiers",
-    name: "Digital Frontiers",
-    date: new Date(Date.now() - 864000000).toISOString(),
-    venue: "Tech Hub",
-    description: "Navigating the complexities of the metaverse and AI.",
-    image:
-      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=1000",
-  },
-];
-
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all"); // all | upcoming | past
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const navigate = useNavigate();
 
   /* ───────────────── FETCH EVENTS ───────────────── */
+  const fetchEvents = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await api.get("/events");
+      const data = res?.data?.success ? res.data.data : res.data;
+
+      const normalized = Array.isArray(data)
+        ? data.map((ev) => ({
+            ...ev,
+            venue: resolveVenue(ev),
+          }))
+        : [];
+
+      if (normalized.length === 0) throw new Error('No events available');
+      setEvents(normalized);
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await api.get("/events");
-        const data = res?.data?.success ? res.data.data : res.data;
-
-        const normalized = Array.isArray(data)
-          ? data.map((ev) => ({
-              ...ev,
-              venue: resolveVenue(ev),
-            }))
-          : [];
-
-        setEvents(normalized.length ? normalized : DUMMY_EVENTS);
-      } catch (err) {
-        console.warn("API failed — using dummy events", err);
-        setEvents(DUMMY_EVENTS);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchEvents();
   }, []);
 
@@ -164,12 +134,13 @@ export default function EventsPage() {
       {/* EVENTS GRID */}
       <div className="max-w-7xl mx-auto px-6">
         {loading ? (
-          <div className="flex flex-col items-center py-24 gap-4">
-            <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
-            <span className="text-red-600 font-bold tracking-widest">
-              LOADING EVENTS
-            </span>
-          </div>
+          <SkeletonGrid 
+            count={6} 
+            ItemComponent={EventCardSkeleton}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          />
+        ) : error ? (
+          <ConnectionError onRetry={fetchEvents} message="Unable to Load Events" />
         ) : displayEvents.length === 0 ? (
           <div className="text-center py-24">
             <Filter size={48} className="mx-auto text-gray-600 mb-4" />

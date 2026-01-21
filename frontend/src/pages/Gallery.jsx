@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import { api } from "../api";
 import { buildImg } from "../utils";
+import { GalleryItemSkeleton, SkeletonGrid } from "../components/Skeleton";
+import ConnectionError from "../components/ConnectionError";
 
 // --- 1. UTILITY FUNCTIONS ---
 
@@ -40,96 +42,51 @@ function getThumbnail(m) {
   return buildImg(candidate) || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=800';
 }
 
-// --- 2. DUMMY DATA ---
-const DUMMY_GALLERY = [
-  {
-    id: "vid-1",
-    type: "video",
-    url: "https://www.youtube.com/watch?v=c0KYU2j0TM4",
-    caption: "The power of introverts",
-    eventName: "TED 2012"
-  },
-  {
-    id: "img-1",
-    type: "photo",
-    url: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
-    caption: "Capturing the emotion of the moment",
-    eventName: "Audience Interaction"
-  },
-  {
-    id: "vid-2",
-    type: "video",
-    url: "https://www.youtube.com/watch?v=iCvmsMzlF7o",
-    caption: "The power of vulnerability",
-    eventName: "TEDxHouston"
-  },
-  {
-    id: "img-2",
-    type: "photo",
-    url: "https://images.unsplash.com/photo-1560523160-754a9e25c68f?auto=format&fit=crop&q=80&w=800",
-    caption: "Networking and sharing ideas",
-    eventName: "Post-Event"
-  },
-  {
-    id: "img-3",
-    type: "photo",
-    url: "https://images.unsplash.com/photo-1475721027767-4d563514396e?auto=format&fit=crop&q=80&w=800",
-    caption: "Speaker preparation backstage",
-    eventName: "Behind the Scenes"
-  },
-  {
-    id: "vid-3",
-    type: "video",
-    url: "https://www.youtube.com/watch?v=RRZvzXvH25I",
-    caption: "The thrilling potential of SixthSense",
-    eventName: "TEDIndia 2009"
-  }
-];
-
 export default function GalleryPage() {
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedMedia, setSelectedMedia] = useState(null);
 
   // --- FETCH DATA ---
-  useEffect(() => {
-    let mounted = true;
-    const fetchMedia = async () => {
-      try {
-        const res = await api.get('/admin/media/public');
-        const data = res?.data?.success ? res.data.data : res?.data || [];
+  const fetchMedia = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await api.get('/admin/media/public');
+      const data = res?.data?.success ? res.data.data : res?.data || [];
+      
+      const apiItems = (Array.isArray(data) ? data : []).map((m) => {
+        const rawUrl = m.publicUrl || m.url || m.file || m.image || '';
+        const isVideo = m.type === 'video' || m.type === 'youtube' || rawUrl.includes('youtube') || rawUrl.includes('youtu.be');
+        const isInstagram = m.type === 'instagram' || rawUrl.includes('instagram.com');
         
-        if (!mounted) return;
+        let itemType = 'photo';
+        if (isVideo) itemType = 'video';
+        if (isInstagram) itemType = 'instagram';
+        
+        return {
+          id: m._id || m.id,
+          type: itemType,
+          url: buildImg(rawUrl) || rawUrl,
+          thumbnail: getThumbnail(m),
+          caption: m.title || m.description || '',
+          eventName: m.eventName || m.meta?.eventName || 'General'
+        };
+      });
 
-        const apiItems = (Array.isArray(data) ? data : []).map((m) => {
-          const rawUrl = m.publicUrl || m.url || m.file || m.image || '';
-          const isVideo = m.type === 'video' || m.type === 'youtube' || rawUrl.includes('youtube') || rawUrl.includes('youtu.be');
-          const isInstagram = m.type === 'instagram' || rawUrl.includes('instagram.com');
-          
-          let itemType = 'photo';
-          if (isVideo) itemType = 'video';
-          if (isInstagram) itemType = 'instagram';
-          
-          return {
-            id: m._id || m.id,
-            type: itemType,
-            url: buildImg(rawUrl) || rawUrl,
-            thumbnail: getThumbnail(m),
-            caption: m.title || m.description || '',
-            eventName: m.eventName || m.meta?.eventName || 'General'
-          };
-        });
+      if (apiItems.length === 0) throw new Error('No media available');
+      setMedia(apiItems);
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setMedia(apiItems.length > 0 ? apiItems : DUMMY_GALLERY);
-      } catch (err) {
-        if (mounted) setMedia(DUMMY_GALLERY);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
+  useEffect(() => {
     fetchMedia();
-    return () => { mounted = false; };
   }, []);
 
   // --- FILTERING ---
@@ -217,9 +174,13 @@ export default function GalleryPage() {
 
         {/* --- 2. MASONRY GRID --- */}
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <SkeletonGrid 
+            count={6} 
+            ItemComponent={GalleryItemSkeleton}
+            className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6"
+          />
+        ) : error ? (
+          <ConnectionError onRetry={fetchMedia} message="Unable to Load Gallery" />
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-2xl bg-neutral-900/30">
             <ImageIcon size={48} className="mx-auto text-gray-600 mb-4" />

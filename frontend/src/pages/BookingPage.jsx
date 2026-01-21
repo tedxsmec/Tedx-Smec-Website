@@ -14,59 +14,47 @@ const resolveVenue = (e) =>
   e?.venue?.name ||
   "Venue TBA";
 
-// ─── DUMMY DATA (Fallback) ───────────────────────────────────
-const DUMMY_EVENTS = [
-  {
-    _id: "evt-1",
-    slug: "echoes-of-innovation",
-    name: "Echoes of Innovation",
-    date: new Date(Date.now() + 864000000).toISOString(),
-    venue: "Grand Auditorium",
-    priceInt: 0,
-    price: "Free",
-  },
-  {
-    _id: "evt-2",
-    slug: "sustainable-horizons",
-    name: "Sustainable Horizons",
-    date: new Date(Date.now() + 1728000000).toISOString(),
-    venue: "Green Park Center",
-    priceInt: 499,
-    price: "₹499",
-  },
-];
-
 export default function BookingPage() {
   const { slug } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchEvent = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await api.get(`/events/${slug}`);
+      const data = res.data?.success ? res.data.data : res.data;
+      if (!data) throw new Error("Event not found");
+      setEvent(data);
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const res = await api.get(`/events/${slug}`);
-        const data = res.data?.success ? res.data.data : res.data;
-        if (data) setEvent(data);
-        else throw new Error("No data");
-      } catch (err) {
-        console.warn("Booking Page: API failed, checking fallback.", err);
-        const found = DUMMY_EVENTS.find(
-          (e) => e.slug === slug || e._id === slug
-        );
-        if (found) setEvent(found);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEvent();
   }, [slug]);
 
   if (loading)
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-red-600 font-bold tracking-widest animate-pulse">
-          LOADING...
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 px-4">
+        <Skeleton className="h-96 w-full max-w-4xl rounded-3xl" />
+        <div className="w-full max-w-4xl space-y-4">
+          <Skeleton className="h-12 w-3/4" />
+          <Skeleton className="h-6 w-1/2" />
+          <Skeleton className="h-24 w-full" />
         </div>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-4">
+        <ConnectionError onRetry={fetchEvent} message="Unable to Load Event" />
       </div>
     );
 

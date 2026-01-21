@@ -40,6 +40,7 @@ const Separator = () => (
 /* ───────────────── Countdown Section ───────────────── */
 export default function CountdownSection() {
   const [targetDate, setTargetDate] = useState(null);
+  const [error, setError] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: "00",
     hours: "00",
@@ -54,7 +55,10 @@ export default function CountdownSection() {
         const res = await api.get("/events");
         const events = res.data?.success ? res.data.data : res.data;
 
-        if (!Array.isArray(events)) return;
+        if (!Array.isArray(events) || events.length === 0) {
+          setError(true);
+          return;
+        }
 
         const now = new Date();
 
@@ -64,9 +68,13 @@ export default function CountdownSection() {
 
         if (upcoming?.date) {
           setTargetDate(new Date(upcoming.date));
+          setError(false);
+        } else {
+          setError(true);
         }
       } catch (err) {
         console.warn("Countdown: failed to fetch event date", err);
+        setError(true);
       }
     };
 
@@ -97,7 +105,7 @@ export default function CountdownSection() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
-  if (!targetDate) return null; // 🔥 hides section until data is ready
+  if (!targetDate || error) return null; // 🔥 hides section if data is not ready or error occurs
 
   return (
     <section className="relative py-20 bg-black overflow-hidden border-y border-white/10">
