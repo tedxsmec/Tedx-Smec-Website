@@ -76,8 +76,8 @@ export default function CustomCursor() {
       mouse.current.velocityX = mouse.current.targetX - prevTargetX;
       mouse.current.velocityY = mouse.current.targetY - prevTargetY;
 
-      // Check for clickable elements
-      const target = e.target.closest('a, button, input, textarea, [role="button"]') || e.target;
+      // Check for clickable elements - optimized
+      const target = e.target;
       const isClickable = 
         target.tagName === 'A' ||
         target.tagName === 'BUTTON' ||
@@ -86,9 +86,9 @@ export default function CustomCursor() {
         target.onclick !== null ||
         target.classList.contains('cursor-pointer') ||
         target.getAttribute('role') === 'button' ||
-        window.getComputedStyle(target).cursor === 'pointer';
+        target.closest('a, button');
 
-      isPointerRef.current = isClickable;
+      isPointerRef.current = !!isClickable;
     };
 
     // Click handler for echo effect

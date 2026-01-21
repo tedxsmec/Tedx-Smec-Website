@@ -1,236 +1,261 @@
-import React, { useEffect, useState } from 'react';
-import { Mail, Linkedin, Instagram, Twitter } from 'lucide-react';
-import { api } from '../api';
-import { buildImg } from '../utils';
+import React, { useEffect, useMemo, useRef, useState, memo } from "react";
+import { Linkedin, Instagram, Twitter, Mail } from "lucide-react";
+import { api } from "../api";
+import { buildImg } from "../utils";
 
-/* ─── LOGIC HELPERS ─── */
+/* ───────── HELPERS ───────── */
+
 const isHodByBio = (bio = "") => {
-  const b = bio?.toLowerCase() || "";
-  return b.includes('hod') || b.includes('head of department'); //
+  const b = bio.toLowerCase();
+  return b.includes("hod") || b.includes("head of department");
 };
 
-const getRankFromRole = (roleStr = "") => {
-  const r = roleStr?.toLowerCase() || "";
-  if (r.includes('lead')) return 1;
-  if (r.includes('organizer') && !r.includes('co')) return 2; // Organizer Priority
-  if (r.includes('co-organizer') || r.includes('co organizer')) return 3; // Co-organizer
-  return 4; 
+const getRankFromRole = (role = "") => {
+  const r = role.toLowerCase();
+  if (r.includes("lead")) return 0;
+  if (r === "organizer") return 1;
+  if (r.includes("co-organizer") || r.includes("co organizer")) return 2;
+  return 3;
 };
+
+/* ───────── HOOKS ───────── */
+
+const useOnScreen = () => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      ([e]) => e.isIntersecting && setVisible(true),
+      { rootMargin: "200px" }
+    );
+    if (ref.current) io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
+
+  return [ref, visible];
+};
+
+/* ───────── PAGE ───────── */
 
 export default function TeamPage() {
   const [faculty, setFaculty] = useState([]);
   const [organizers, setOrganizers] = useState([]);
-  const [activeTab, setActiveTab] = useState("Technical");
-  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState("Technical");
 
-  const teamList = ["Technical", "Media", "Design", "Marketing", "Curation", "Operations & Logistics", "Sponsorship" , "Finance"];
+  const teams = [
+    "Technical",
+    "Media",
+    "Design",
+    "Marketing",
+    "Curation",
+    "Operations & Logistics",
+    "Sponsorship",
+    "Finance",
+  ];
 
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [c, o] = await Promise.allSettled([
-          api.get('/admin/coordinators/public/list'),
-          api.get('/admin/organizers/public/list'),
-        ]);
-        const pick = (r) => (r.status === 'fulfilled' && r.value?.data?.success ? r.value.data.data : []);
-
-        setFaculty([...pick(c)].sort((a, b) => (isHodByBio(a.bio) === isHodByBio(b.bio) ? 0 : isHodByBio(a.bio) ? -1 : 1))); //
-        setOrganizers(pick(o));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
+    Promise.all([
+      api.get("/admin/coordinators/public/list"),
+      api.get("/admin/organizers/public/list"),
+    ]).then(([c, o]) => {
+      setFaculty(c.data?.data || []);
+      setOrganizers(o.data?.data || []);
+    });
   }, []);
 
-  const globalLeaders = organizers.filter(m => {
-    const r = (m.role || "").toLowerCase();
-    return (r === "organizer" || r === "co-organizer" || r === "co organizer") && 
-           !teamList.some(team => r.includes(team.toLowerCase()));
-  }).sort((a, b) => getRankFromRole(a.role) - getRankFromRole(b.role));
+  /* FACULTY SORT (HOD FIRST) */
+  const sortedFaculty = useMemo(() => {
+    return [...faculty].sort((a, b) =>
+      isHodByBio(a.bio) === isHodByBio(b.bio)
+        ? 0
+        : isHodByBio(a.bio)
+        ? -1
+        : 1
+    );
+  }, [faculty]);
 
-  const teamMembers = organizers
-    .filter(m => (m.role || "").toLowerCase().includes(activeTab.toLowerCase()))
-    .sort((a, b) => getRankFromRole(a.role) - getRankFromRole(b.role));
+  /* ORGANIZERS FILTER + RANK */
+  const teamMembers = useMemo(() => {
+    return organizers
+      .filter(m =>
+        (m.role || "").toLowerCase().includes(active.toLowerCase())
+      )
+      .sort((a, b) => getRankFromRole(a.role) - getRankFromRole(b.role));
+  }, [organizers, active]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-bold text-xl italic animate-pulse">
-      ECHOES OF INNOVATION...
-    </div>
-  );
+  /* EXECUTIVE (ORGANIZER + CO-ORGANIZER) SHOWN ABOVE TABS */
+  const executiveLeadership = useMemo(() => {
+    const teamKeywords = teams.map(t => t.toLowerCase());
+
+    return organizers
+      .filter(m => {
+        const r = (m.role || "").toLowerCase();
+        const isExec = r === "organizer" || r === "co-organizer" || r === "co organizer";
+        const mentionsTeam = teamKeywords.some(t => r.includes(t));
+        return isExec && !mentionsTeam;
+      })
+      .sort((a, b) => getRankFromRole(a.role) - getRankFromRole(b.role));
+  }, [organizers, teams]);
 
   return (
-    <div className="bg-black min-h-screen pt-24 pb-20 px-4 md:px-6 text-white text-center font-sans">
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-subtle-up {
-          animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
+    <div className="min-h-screen bg-black text-white px-4 pt-24 pb-20">
 
-      <div className="max-w-7xl mx-auto space-y-24 md:space-y-32 animate-subtle-up">
-        
-        {/* FACULTY SECTION */}
-        <section>
-          <SectionHeader index="01" title="Faculty Coordinators" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 justify-center">
-            {faculty.map((member, i) => (
-              <div key={member._id || i} className="w-full max-w-[340px] mx-auto">
-                <TeamCard member={member} type="faculty" />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ORGANIZING TEAM */}
-        <section>
-          <SectionHeader index="02" title="Organizing Team" />
-
-          {/* EXECUTIVE LEADERSHIP */}
-          {globalLeaders.length > 0 && (
-            <div className="mb-20">
-              <h3 className="text-gray-500 uppercase tracking-[0.3em] text-[10px] font-bold mb-10 inline-block border-b-2 border-red-600 pb-2">
-                Executive Leadership
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 justify-center">
-                {globalLeaders.map((member, i) => (
-                  <div key={member._id || i} className="w-full max-w-[340px] mx-auto">
-                    <TeamCard member={member} type="organizer" showSocials />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TEAM TABS */}
-          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-12 md:mb-16 px-2">
-            {teamList.map((team) => (
-              <button
-                key={team}
-                onClick={() => setActiveTab(team)}
-                className={`relative px-4 md:px-6 py-2.5 md:py-3 text-[10px] md:text-xs uppercase tracking-[0.15em] font-bold rounded-full border-2 transition-all duration-300 overflow-hidden group ${
-                  activeTab === team 
-                    ? "border-red-600 bg-red-600 text-white shadow-[0_0_20px_rgba(230,43,30,0.3)]" 
-                    : "border-white/10 bg-white/5 text-gray-400 hover:border-red-600/50 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                {/* Animated background on hover */}
-                <span className={`absolute inset-0 bg-gradient-to-r from-red-600/20 to-red-600/5 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500 ${activeTab === team ? 'hidden' : ''}`} />
-                
-                {/* Text */}
-                <span className="relative z-10">{team}</span>
-                
-                {/* Active indicator dot */}
-                {activeTab === team && (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* DEPARTMENT GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 justify-center">
-            {teamMembers.map((member, i) => (
-              <div key={member._id || i} className="w-full max-w-[340px] mx-auto">
-                <TeamCard member={member} type="organizer" showSocials />
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* FACULTY */}
+      <Header title="Faculty Coordinators" />
+      <div className="mb-16 md:mb-24">
+        <Grid data={sortedFaculty} type="faculty" />
       </div>
-    </div>
-  );
-}
 
-/* ─── UI COMPONENTS ─── */
+      {/* ORGANIZERS */}
+      <Header title="Organizing Team" />
 
-function TeamCard({ member, type, showSocials }) {
-  const isFaculty = type === "faculty";
-  const [isHovered, setIsHovered] = React.useState(false);
-
-  return (
-    <div className="group relative h-[400px] md:h-[450px] bg-neutral-900 rounded-2xl overflow-hidden border border-white/5 
-                    hover:border-red-600/40 transition-colors duration-500 
-                    flex flex-col justify-end items-center mx-auto w-full shadow-lg"
-         onMouseEnter={() => setIsHovered(true)}
-         onMouseLeave={() => setIsHovered(false)}>
-      
-      <img
-        src={buildImg(member.photo)}
-        alt={member.name}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      
-      {/* Dark gradient for text legibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-      
-      {showSocials && <SocialOverlay member={member} isHovered={isHovered} />}
-
-      <div className="relative z-10 w-full p-5 md:p-6 bg-gradient-to-t from-black/95 to-transparent pt-12">
-        {/* Centered Bar - Fixed Vertical Level */}
-        <div className={`h-1 bg-red-600 mx-auto mb-4 transition-[width] duration-500 ${isHovered ? 'w-20 md:w-24' : 'w-10 md:w-12'}`} />
-        
-        <h3 className="text-lg md:text-xl font-black text-white leading-tight uppercase tracking-tighter">
-          {member.name}
-        </h3>
-
-        <div className="min-h-[60px] md:min-h-[70px] flex flex-col justify-center">
-          {isFaculty ? (
-            <>
-              <p className="text-red-600 text-xs md:text-sm font-bold mt-1 line-clamp-2 italic">{member.bio}</p>
-              <p className="text-gray-400 text-[9px] md:text-[10px] uppercase tracking-widest mt-1 font-medium">{member.department}</p>
-            </>
-          ) : (
-            <>
-              <p className="text-red-600 text-xs md:text-sm font-bold mt-1 uppercase tracking-tight">{member.role}</p>
-              <p className="text-gray-400 text-[9px] md:text-[10px] mt-1 line-clamp-2 leading-relaxed italic">{member.bio}</p>
-            </>
-          )}
+      {/* EXECUTIVE LEADERSHIP (Organizer / Co-organizer) */}
+      {executiveLeadership.length > 0 && (
+        <div className="max-w-7xl mx-auto mb-12">
+          <h3 className="text-center text-gray-400 uppercase tracking-[0.2em] text-xs font-bold mb-6">Executive Leadership</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {executiveLeadership.map(m => (
+              <Card key={m._id} member={m} type="organizer" />
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* TABS */}
+      <div className="flex flex-wrap justify-center gap-3 mb-12">
+        {teams.map(t => (
+          <button
+            key={t}
+            onClick={() => setActive(t)}
+            className={`px-4 py-2 text-xs uppercase tracking-widest rounded-full border transition
+              ${
+                active === t
+                  ? "bg-red-600 border-red-600"
+                  : "border-white/20 text-gray-400 hover:border-red-600 hover:text-white"
+              }`}
+          >
+            {t}
+          </button>
+        ))}
       </div>
+
+      <Grid data={teamMembers} type="organizer" />
     </div>
   );
 }
 
-function SectionHeader({ index, title }) {
+/* ───────── GRID ───────── */
+
+const Grid = memo(({ data, type }) => {
   return (
-    <div className="flex flex-col items-center gap-2 mb-10 md:mb-12">
-      <span className="text-4xl md:text-5xl font-black text-white/10 italic select-none leading-none">{index}</span>
-      <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tighter italic">{title}</h2>
-      <div className="h-1 w-12 md:w-16 bg-red-600 mt-2" />
+    <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {data.map(m => (
+        <Card key={m._id} member={m} type={type} />
+      ))}
     </div>
   );
-}
+});
 
-function SocialOverlay({ member, isHovered }) {
-  const s = {
-    linkedin: member.linkedin || member.linkedinUrl || null,
-    instagram: member.twitter || member.twitterUrl || member.x || null,
-    twitter: member.instagram || member.instagramUrl || null,
-    email: member.email || null,
-  };
+/* ───────── CARD ───────── */
+
+const Card = memo(({ member, type }) => {
+  const [ref, visible] = useOnScreen();
 
   return (
-    <div className={`absolute top-3 right-3 md:top-4 md:right-4 flex flex-col gap-2 z-20 
-                    transition-opacity duration-300 ${
-                      isHovered ? 'opacity-100' : 'opacity-100 md:opacity-0'
-                    }`}>
-      {s.linkedin && <SocialBtn href={s.linkedin} icon={<Linkedin size={14} className="md:w-4 md:h-4"/>}/>}
-      {s.instagram && <SocialBtn href={s.instagram} icon={<Instagram size={14} className="md:w-4 md:h-4"/>}/>}
-      {s.twitter && <SocialBtn href={s.twitter} icon={<Twitter size={14} className="md:w-4 md:h-4"/>}/>}
-      {s.email && <SocialBtn href={`mailto:${s.email}`} icon={<Mail size={14} className="md:w-4 md:h-4"/>}/>}
+    <div ref={ref} className="bg-neutral-900 rounded-xl p-3">
+      <div className="aspect-[3/4] rounded-lg bg-neutral-800 overflow-hidden">
+        {visible && (
+          <img
+            src={buildImg(member.photo)}
+            alt={member.name}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      <div className="text-center mt-3">
+        <h3 className="text-sm font-bold uppercase">{member.name}</h3>
+
+        {type === "faculty" ? (
+          <>
+            <p className="text-red-500 text-xs mt-1 italic">
+              {member.designation || member.bio}
+            </p>
+            <p className="text-gray-400 text-[10px] uppercase tracking-widest mt-1">
+              {member.department}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-red-500 text-xs mt-1 uppercase font-bold">
+              {member.role}
+            </p>
+            {member.bio && (
+              <p className="text-gray-400 text-[11px] mt-1 line-clamp-2 italic">
+                {member.bio}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
+      <Socials member={member} />
     </div>
   );
-}
+});
 
-function SocialBtn({ href, icon }) {
+/* ───────── SOCIALS ───────── */
+
+const Socials = memo(({ member }) => {
   return (
-    <a href={href} target="_blank" rel="noreferrer" 
-       className="p-1.5 md:p-2 bg-black/70 md:bg-black/80 hover:bg-red-600 text-white rounded-full transition-all">
-      {icon}
+    <div className="flex justify-center gap-3 mt-3 text-gray-400">
+      {member.linkedin && (
+        <Icon href={member.linkedin}>
+          <Linkedin size={14} />
+        </Icon>
+      )}
+      {member.instagram && (
+        <Icon href={member.twitter}>
+          <Twitter size={14} />
+        </Icon>
+      )}
+      {member.twitter && (
+        <Icon href={member.instagram}>
+          <Instagram size={14} />
+        </Icon>
+      )}
+      {member.email && (
+        <Icon href={`mailto:${member.email}`}>
+          <Mail size={14} />
+        </Icon>
+      )}
+    </div>
+  );
+});
+
+function Icon({ href, children }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="hover:text-red-500 transition"
+    >
+      {children}
     </a>
+  );
+}
+
+/* ───────── HEADER ───────── */
+
+function Header({ title }) {
+  return (
+    <div className="text-center mb-12">
+      <h2 className="text-3xl font-bold uppercase italic">{title}</h2>
+      <div className="w-12 h-1 bg-red-600 mx-auto mt-3" />
+    </div>
   );
 }
