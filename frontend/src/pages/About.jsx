@@ -25,7 +25,7 @@ const PATRONS = [
   },
   {
     role: "Director",
-    name: "Dr. K. Ravindra",
+    name: " Prof. Dr. K. Ravindra",
     image: director, 
     message: "TEDxSMEC is more than an event; it is a testament to our commitment to holistic growth and intellectual curiosity."
   }
