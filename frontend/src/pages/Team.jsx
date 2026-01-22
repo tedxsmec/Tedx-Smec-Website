@@ -5,9 +5,17 @@ import { buildImg } from "../utils";
 
 /* ───────── HELPERS ───────── */
 
-const isHodByBio = (bio = "") => {
-  const b = bio.toLowerCase();
-  return b.includes("hod") || b.includes("head of department");
+const isHod = (member = {}) => {
+  const bio = (member.bio || "").toLowerCase();
+  const designation = (member.designation || "").toLowerCase();
+  const department = (member.department || "").toLowerCase();
+  const text = `${bio} ${designation} ${department}`;
+
+  // catch variants like "HOD", "Head of Department", "Head of the Department"
+  if (/\bhod\b/.test(text)) return true;
+  if (text.includes("head of the department")) return true;
+  if (text.includes("head of department")) return true;
+  return text.includes("head") && text.includes("department");
 };
 
 const getRankFromRole = (role = "") => {
@@ -64,15 +72,20 @@ export default function TeamPage() {
     });
   }, []);
 
-  /* FACULTY SORT (HOD FIRST) */
+  /* FACULTY SORT (HOD FIRST, THEN REVERSE ALPHA BY NAME) */
   const sortedFaculty = useMemo(() => {
-    return [...faculty].sort((a, b) =>
-      isHodByBio(a.bio) === isHodByBio(b.bio)
+    return [...faculty].sort((a, b) => {
+      const aHod = isHod(a);
+      const bHod = isHod(b);
+
+      if (aHod !== bHod) return aHod ? -1 : 1;
+
+      const aName = a.name || "";
+      const bName = b.name || "";
+      return aName === bName
         ? 0
-        : isHodByBio(a.bio)
-        ? -1
-        : 1
-    );
+        : bName.localeCompare(aName, undefined, { sensitivity: "base" });
+    });
   }, [faculty]);
 
   /* ORGANIZERS FILTER + RANK */
