@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import { Linkedin, Instagram, Twitter, Mail } from "lucide-react";
 import { api } from "../api";
 import { buildImg } from "../utils";
+import ConnectionError from "../components/ConnectionError";
+import { SkeletonGrid, TeamMemberSkeleton } from "../components/Skeleton";
 
 /* ───────── HELPERS ───────── */
 
@@ -50,6 +52,8 @@ export default function TeamPage() {
   const [faculty, setFaculty] = useState([]);
   const [organizers, setOrganizers] = useState([]);
   const [active, setActive] = useState("Technical");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const teams = [
     "Technical",
@@ -62,14 +66,39 @@ export default function TeamPage() {
     "Finance",
   ];
 
+  const loadTeam = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [cRes, oRes] = await Promise.allSettled([
+        api.get("/admin/coordinators/public/list"),
+        api.get("/admin/organizers/public/list"),
+      ]);
+
+      const toData = (res) =>
+        res.status === "fulfilled"
+          ? res.value?.data?.data || res.value?.data || []
+          : [];
+
+      const facultyData = toData(cRes);
+      const organizerData = toData(oRes);
+
+      if (facultyData.length === 0 && organizerData.length === 0) {
+        throw new Error("No team data");
+      }
+
+      setFaculty(facultyData);
+      setOrganizers(organizerData);
+    } catch (err) {
+      console.error("Team load error", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([
-      api.get("/admin/coordinators/public/list"),
-      api.get("/admin/organizers/public/list"),
-    ]).then(([c, o]) => {
-      setFaculty(c.data?.data || []);
-      setOrganizers(o.data?.data || []);
-    });
+    loadTeam();
   }, []);
 
   /* FACULTY SORT (HOD FIRST, THEN REVERSE ALPHA BY NAME) */
@@ -111,13 +140,43 @@ export default function TeamPage() {
       .sort((a, b) => getRankFromRole(a.role) - getRankFromRole(b.role));
   }, [organizers, teams]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white px-4 pt-24 pb-20">
+        <Header title="Faculty Coordinators" />
+        <div className="max-w-7xl mx-auto mb-16 md:mb-24">
+          <SkeletonGrid count={4} ItemComponent={TeamMemberSkeleton} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" />
+        </div>
+
+        <Header title="Organizing Team" />
+        <div className="max-w-7xl mx-auto mb-12">
+          <SkeletonGrid count={4} ItemComponent={TeamMemberSkeleton} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white px-4 pt-24 pb-20 flex items-center justify-center">
+        <div className="max-w-xl w-full">
+          <ConnectionError onRetry={loadTeam} message="Unable to load team" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white px-4 pt-24 pb-20">
 
       {/* FACULTY */}
       <Header title="Faculty Coordinators" />
       <div className="mb-16 md:mb-24">
-        <Grid data={sortedFaculty} type="faculty" />
+        {sortedFaculty.length > 0 ? (
+          <Grid data={sortedFaculty} type="faculty" />
+        ) : (
+          <div className="text-center text-gray-400">No faculty coordinators available</div>
+        )}
       </div>
 
       {/* ORGANIZERS */}
@@ -153,7 +212,11 @@ export default function TeamPage() {
         ))}
       </div>
 
-      <Grid data={teamMembers} type="organizer" />
+      {teamMembers.length > 0 ? (
+        <Grid data={teamMembers} type="organizer" />
+      ) : (
+        <div className="text-center text-gray-400">No members in this team yet.</div>
+      )}
     </div>
   );
 }

@@ -17,6 +17,8 @@ export default function AdminEventForm() {
     isUpcoming: true,
     price: 0,
     currency: 'INR',
+    capacity: '',
+    bookingsOpen: true,
   });
   const [bannerFile, setBannerFile] = useState(null);
   const [bannerPreview, setBannerPreview] = useState(null); // data URL preview
@@ -42,6 +44,8 @@ export default function AdminEventForm() {
             d.isUpcoming === 'true',
           price: d.price !== undefined && d.price !== null ? Number(d.price) : 0,
           currency: d.currency || 'INR',
+          capacity: d.capacity !== null && d.capacity !== undefined ? d.capacity : '',
+          bookingsOpen: d.bookingsOpen !== false,
         });
 
         // backend uses bannerUrl (normalized by server) — fall back to other keys if needed
@@ -73,6 +77,9 @@ export default function AdminEventForm() {
     if (!form.name.trim()) return alert('Please enter the event name.');
     if (form.date && !/^\d{4}-\d{2}-\d{2}$/.test(form.date)) return alert('Date must be YYYY-MM-DD.');
     if (isNaN(Number(form.price))) return alert('Price must be a number.');
+    if (form.capacity !== '' && form.capacity !== null && form.capacity !== undefined && isNaN(Number(form.capacity))) {
+      return alert('Capacity must be a number or left blank.');
+    }
 
     setLoading(true);
     try {
@@ -86,6 +93,8 @@ export default function AdminEventForm() {
       fd.append('isUpcoming', form.isUpcoming ? '1' : '0');
       fd.append('price', String(Number(form.price || 0)));
       fd.append('currency', form.currency || 'INR');
+      fd.append('capacity', form.capacity === '' ? '' : String(Number(form.capacity)));
+      fd.append('bookingsOpen', form.bookingsOpen ? '1' : '0');
 
       if (bannerFile) fd.append('banner', bannerFile);
 
@@ -265,7 +274,7 @@ export default function AdminEventForm() {
         </div>
       </div>
 
-      {/* price + currency */}
+      {/* price + currency + capacity */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 160 }}>
           <label className="muted" style={{ fontSize: 13 }}>Price</label>
@@ -309,6 +318,26 @@ export default function AdminEventForm() {
           </select>
         </div>
 
+        <div style={{ minWidth: 160 }}>
+          <label className="muted" style={{ fontSize: 13 }}>Capacity (leave blank for unlimited)</label>
+          <input
+            type="number"
+            min="0"
+            className="form-input"
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+            placeholder="e.g. 250"
+            style={{
+              padding: '8px 10px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.06)',
+              background: 'transparent',
+              color: 'white',
+              width: '100%',
+            }}
+          />
+        </div>
+
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
           <input
             type="checkbox"
@@ -319,6 +348,19 @@ export default function AdminEventForm() {
           />
           <span className="muted">Mark as upcoming</span>
         </label>
+      </div>
+
+      {/* Booking toggle */}
+      <div style={{ marginTop: 12, display:'flex', alignItems:'center', gap:10, marginBottom: 12 }}>
+        <label className="muted" style={{ fontSize: 13, marginBottom: 0 }}>Bookings Open</label>
+        <input
+          type="checkbox"
+          checked={!!form.bookingsOpen}
+          onChange={(e) => setForm({ ...form, bookingsOpen: e.target.checked })}
+        />
+        <span style={{ fontSize: 13, color:'rgba(255,255,255,0.7)' }}>
+          Uncheck to close bookings (blocks new purchases)
+        </span>
       </div>
 
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 6 }}>

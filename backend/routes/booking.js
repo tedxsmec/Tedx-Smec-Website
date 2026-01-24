@@ -406,6 +406,30 @@ router.post('/', async (req, res) => {
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ error: 'event not found' });
 
+    // Enforce booking switches
+    if (event.bookingsOpen === false) {
+      return res.status(400).json({ error: 'Bookings are currently closed for this event.' });
+    }
+
+    // Capacity check (if capacity is set)
+    let ticketsSold = 0;
+    if (event.capacity) {
+      const soldAgg = await Ticket.aggregate([
+        { $match: { eventId: event._id, status: { $nin: ['cancelled'] } } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$quantity', 1] } } } }
+      ]);
+      ticketsSold = soldAgg[0]?.total || 0;
+
+      const remaining = Math.max(0, event.capacity - ticketsSold);
+      const requested = quantity || 1;
+      if (remaining <= 0) {
+        return res.status(400).json({ error: 'Tickets are sold out for this event.' });
+      }
+      if (requested > remaining) {
+        return res.status(400).json({ error: `Only ${remaining} ticket(s) remaining.` });
+      }
+    }
+
     // Generate unique ticket code
     let ticketCode = null;
     for (let i = 0; i < 8; i++) {

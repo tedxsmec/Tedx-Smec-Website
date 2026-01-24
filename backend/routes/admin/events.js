@@ -732,7 +732,7 @@ async function fetchPopulatedEvent(id, req) {
 // CREATE EVENT (Cloudinary banner)
 router.post('/', upload.single('banner'), async (req, res) => {
   try {
-    const { name, slug, description, date, location, isUpcoming, price, currency } = req.body;
+    const { name, slug, description, date, location, isUpcoming, price, currency, capacity, bookingsOpen } = req.body;
     if (!name || !slug)
       return res.status(400).json({ success: false, message: 'name and slug required' });
 
@@ -752,6 +752,8 @@ router.post('/', upload.single('banner'), async (req, res) => {
       bannerUrl,
       price: Number(price || 0),
       currency: currency || 'INR',
+      capacity: capacity !== undefined && capacity !== '' ? Number(capacity) : null,
+      bookingsOpen: bookingsOpen === undefined ? true : parseBoolish(bookingsOpen),
     });
 
     res.json({ success: true, data: await fetchPopulatedEvent(ev._id, req) });
@@ -792,6 +794,9 @@ router.put('/:id', upload.single('banner'), async (req, res) => {
     if (update.date) update.date = new Date(update.date);
     if (update.isUpcoming !== undefined) update.isUpcoming = parseBoolish(update.isUpcoming);
     if (update.price !== undefined) update.price = Number(update.price || 0);
+    if (update.capacity !== undefined)
+      update.capacity = update.capacity === '' || update.capacity === null ? null : Number(update.capacity);
+    if (update.bookingsOpen !== undefined) update.bookingsOpen = parseBoolish(update.bookingsOpen);
 
     const ev = await Event.findByIdAndUpdate(req.params.id, update, { new: true }).lean();
     if (!ev) return res.status(404).json({ success: false });

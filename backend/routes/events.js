@@ -3,8 +3,23 @@
 const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
+const Ticket = require('../models/Ticket');
 
 const getBaseUrl = (req) => `${req.protocol}://${req.get('host')}`;
+
+function computeAvailability(event, sold) {
+  const capacity = event.capacity ?? null;
+  const remaining = capacity ? Math.max(0, capacity - sold) : null;
+
+  if (event.bookingsOpen === false) return { status: 'closed', remaining };
+  if (!capacity) return { status: 'available', remaining: null };
+  if (remaining <= 0) return { status: 'soldout', remaining: 0 };
+
+  const pct = remaining / capacity;
+  if (pct > 0.8) return { status: 'available', remaining };
+  if (pct > 0.4) return { status: 'filling-fast', remaining };
+  return { status: 'limited', remaining };
+}
 
 // helper to normalize one URL (if relative -> prefix base)
 function normalizeUrl(base, url) {
@@ -106,7 +121,23 @@ router.get('/:slug', async (req, res) => {
     // normalize nested media (speakers logos/photos, sponsor logos etc)
     normalizeNestedMedia(base, event);
 
-    return res.json({ success: true, data: event });
+    // compute availability based on sold tickets
+    const soldAgg = await Ticket.aggregate([
+      { $match: { eventId: event._id, status: { $nin: ['cancelled'] } } },
+      { $group: { _id: null, total: { $sum: { $ifNull: ['$quantity', 1] } } } }
+    ]);
+    const ticketsSold = soldAgg[0]?.total || 0;
+    const availability = computeAvailability(event, ticketsSold);
+
+    return res.json({
+      success: true,
+      data: {
+        ...event,
+        ticketsSold,
+        ticketsRemaining: availability.remaining,
+        availabilityStatus: availability.status
+      }
+    });
   } catch (err) {
     console.error('GET /api/events/:slug error', err);
     return res.status(500).json({ success: false, message: 'Server error' });

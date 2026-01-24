@@ -178,6 +178,20 @@ export default function EventsAdmin() {
                   <div>
                     <div style={{ fontWeight: 700, color: 'white' }}>{ev.name}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{ev.description ? ev.description.slice(0, 120) : ''}</div>
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:4 }}>
+                      <span style={{ fontSize:11, padding:'2px 8px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background: ev.bookingsOpen === false ? 'rgba(255,255,255,0.05)' : 'rgba(18,132,47,0.15)', color: ev.bookingsOpen === false ? 'rgba(255,255,255,0.7)' : '#9EF7BE' }}>
+                        {ev.bookingsOpen === false ? 'Bookings closed' : 'Bookings open'}
+                      </span>
+                      {ev.capacity ? (
+                        <span style={{ fontSize:11, padding:'2px 8px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.8)' }}>
+                          Capacity {ev.capacity}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize:11, padding:'2px 8px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.65)' }}>
+                          Unlimited
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Slug */}

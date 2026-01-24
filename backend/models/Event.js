@@ -17,6 +17,10 @@ const EventSchema = new Schema({
   price: { type: Number, default: 0 },    // store as number (e.g. 499, 0 for free)
   currency: { type: String, default: 'INR' }, // e.g. 'INR', 'USD'
 
+  // Booking controls
+  capacity: { type: Number, default: null },      // total ticket limit; null = unlimited
+  bookingsOpen: { type: Boolean, default: true }, // admin can open/close bookings
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', EventSchema);

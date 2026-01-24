@@ -47,6 +47,10 @@ export default function BookingForm() {
   const [ticket, setTicket] = useState(null);
   const [orderInfo, setOrderInfo] = useState(null);
 
+  const remainingTickets = event?.ticketsRemaining;
+  const availability = event?.availabilityStatus;
+  const bookingsClosed = event?.bookingsOpen === false || availability === 'closed' || availability === 'soldout' || (remainingTickets !== null && remainingTickets !== undefined && remainingTickets <= 0);
+
   /* ================= LOAD EVENT ================= */
   useEffect(() => {
     let mounted = true;
@@ -71,7 +75,15 @@ export default function BookingForm() {
     const { name, value } = e.target;
     setForm((p) => ({
       ...p,
-      [name]: name === "tickets" ? Math.max(1, Number(value)) : value,
+      [name]: name === "tickets"
+        ? (() => {
+            const num = Math.max(1, Number(value));
+            if (remainingTickets !== null && remainingTickets !== undefined) {
+              return Math.min(num, remainingTickets || 0);
+            }
+            return num;
+          })()
+        : value,
     }));
   };
 
@@ -134,6 +146,16 @@ export default function BookingForm() {
   /* ================= FORM SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (bookingsClosed) {
+      setMessage({ type: "error", text: "Bookings are currently closed or sold out." });
+      return;
+    }
+
+    if (remainingTickets !== null && remainingTickets !== undefined && form.tickets > remainingTickets) {
+      setMessage({ type: "error", text: `Only ${remainingTickets} ticket(s) remaining.` });
+      return;
+    }
 
     if (
       !form.name ||
@@ -231,6 +253,29 @@ export default function BookingForm() {
                 {event.date ? new Date(event.date).toLocaleString() : "Date TBA"}
               </p>
               {/* <p className="text-gray-300">{event.description}</p> */}
+
+              {/* Availability badge */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {availability === 'available' && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-green-900/40 border border-green-600 text-green-200">Tickets available</span>
+                )}
+                {availability === 'filling-fast' && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-yellow-900/40 border border-yellow-600 text-yellow-200">Tickets filling fast</span>
+                )}
+                {availability === 'limited' && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-orange-900/40 border border-orange-600 text-orange-200">Limited tickets available</span>
+                )}
+                {availability === 'soldout' && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-red-900/50 border border-red-700 text-red-200">Sold out</span>
+                )}
+                {availability === 'closed' && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-gray-900/60 border border-gray-700 text-gray-200">Bookings closed</span>
+                )}
+
+                {remainingTickets !== null && remainingTickets !== undefined && availability !== 'soldout' && availability !== 'closed' && (
+                  <span className="text-sm text-gray-400">{remainingTickets} ticket(s) remaining</span>
+                )}
+              </div>
             </Card>
 
             {/* MESSAGES */}
@@ -370,10 +415,12 @@ export default function BookingForm() {
                 {/* SUBMIT BUTTON */}
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || bookingsClosed}
                   className="w-full py-4 rounded-xl text-lg font-semibold bg-red-600 hover:bg-red-500 transition disabled:bg-gray-700 disabled:cursor-not-allowed"
                 >
-                  {submitting
+                  {bookingsClosed
+                    ? "Bookings closed"
+                    : submitting
                     ? "Processing..."
                     : event.price > 0
                     ? `Pay ${formatINR(totalAmount)} & Book`
