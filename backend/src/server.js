@@ -536,6 +536,9 @@ app.post(
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+
+app.use("/api/tickets", require("../routes/tickets"));
+
 /* =========================================================
    STATIC FILES
    ========================================================= */
