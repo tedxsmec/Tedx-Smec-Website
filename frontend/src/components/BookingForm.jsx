@@ -230,7 +230,7 @@ export default function BookingForm() {
               <p className="text-sm text-gray-400 mb-3">
                 {event.date ? new Date(event.date).toLocaleString() : "Date TBA"}
               </p>
-              <p className="text-gray-300">{event.description}</p>
+              {/* <p className="text-gray-300">{event.description}</p> */}
             </Card>
 
             {/* MESSAGES */}
