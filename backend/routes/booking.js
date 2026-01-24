@@ -438,10 +438,19 @@ router.post('/', async (req, res) => {
     if (!event.price || event.price === 0) {
       ticket.status = 'paid';
 
-      // Generate assets for free event
+      // Generate assets for free event - each step isolated
+      console.log('Generating assets for free event ticket:', ticket.ticketCode);
+
+      // QR Generation
       try {
         ticket.qrDataUrl = await generateQrDataUrl(ticket.ticketCode);
+        console.log('✅ QR code generated');
+      } catch (err) {
+        console.error('❌ QR generation failed:', err.message);
+      }
 
+      // Image Generation (optional)
+      try {
         const imageBuffer = await generateTicketImageBuffer(ticket);
         if (imageBuffer) {
           const imageUpload = await uploadToCloudinary(
@@ -450,8 +459,14 @@ router.post('/', async (req, res) => {
             'image'
           );
           ticket.imageUrl = imageUpload.secure_url;
+          console.log('✅ Image uploaded');
         }
+      } catch (err) {
+        console.error('❌ Image generation failed:', err.message);
+      }
 
+      // PDF Generation (critical)
+      try {
         const pdfBuffer = await generatePdfBuffer(ticket);
         const pdfUpload = await uploadToCloudinary(
           pdfBuffer,
@@ -460,10 +475,17 @@ router.post('/', async (req, res) => {
         );
         ticket.pdfUrl = pdfUpload.secure_url;
         ticket.pdfTicketBase64 = pdfBuffer.toString('base64');
-
-        await ticket.save();
+        console.log('✅ PDF generated and uploaded');
       } catch (err) {
-        console.error('Free event asset generation failed', err);
+        console.error('❌ PDF generation failed:', err.message);
+      }
+
+      // Save all assets
+      try {
+        await ticket.save();
+        console.log('✅ Free event ticket saved');
+      } catch (err) {
+        console.error('❌ Failed to save free ticket:', err.message);
       }
 
       // Send email for free event
@@ -550,14 +572,18 @@ router.post('/verify', async (req, res) => {
     await ticket.save(); // ✅ STATUS NOW PERSISTS
 
     /* ---------------- ASSET GENERATION (OPTIONAL) ---------------- */
+    console.log('Starting asset generation for ticket:', ticket.ticketCode);
+    
+    // QR Generation
     try {
-      console.log('Starting asset generation for ticket:', ticket.ticketCode);
-      
-      // QR
       ticket.qrDataUrl = await generateQrDataUrl(ticket.ticketCode);
-      console.log('QR code generated');
+      console.log('✅ QR code generated');
+    } catch (err) {
+      console.error('❌ QR generation failed:', err.message);
+    }
 
-      // Image (skipped safely if null)
+    // Image Generation (optional, may be skipped)
+    try {
       const imageBuffer = await generateTicketImageBuffer(ticket);
       if (imageBuffer) {
         const imageUpload = await uploadToCloudinary(
@@ -566,12 +592,19 @@ router.post('/verify', async (req, res) => {
           'image'
         );
         ticket.imageUrl = imageUpload.secure_url;
-        console.log('Ticket image uploaded');
+        console.log('✅ Ticket image uploaded');
+      } else {
+        console.log('ℹ️ Ticket image generation skipped (returns null)');
       }
+    } catch (err) {
+      console.error('❌ Image generation failed:', err.message);
+      // Continue - image is optional
+    }
 
-      // PDF
+    // PDF Generation (critical for download button)
+    try {
       const pdfBuffer = await generatePdfBuffer(ticket);
-      console.log('PDF generated, size:', pdfBuffer.length);
+      console.log('✅ PDF generated, size:', pdfBuffer.length);
       
       const pdfUpload = await uploadToCloudinary(
         pdfBuffer,
@@ -580,14 +613,19 @@ router.post('/verify', async (req, res) => {
       );
       ticket.pdfUrl = pdfUpload.secure_url;
       ticket.pdfTicketBase64 = pdfBuffer.toString('base64');
-      console.log('PDF uploaded and base64 saved');
-
-      await ticket.save();
-      console.log('Ticket saved with all assets');
+      console.log('✅ PDF uploaded and base64 saved');
     } catch (err) {
-      console.error('ticket asset generation failed:', err);
+      console.error('❌ PDF generation failed:', err.message);
       console.error('Error stack:', err.stack);
-      // Payment already saved — never rollback
+      // Critical failure - ticket won't have download button
+    }
+
+    // Save all generated assets
+    try {
+      await ticket.save();
+      console.log('✅ Ticket saved with all assets');
+    } catch (err) {
+      console.error('❌ Failed to save ticket assets:', err.message);
     }
 
     /* ---------------- NOTIFICATIONS ---------------- */

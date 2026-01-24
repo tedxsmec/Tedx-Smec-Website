@@ -45,6 +45,8 @@ const TicketSchema = new Schema({
   qrDataUrl: String,          // data:image/png;base64,...
   pdfTicketBase64: String,    // base64 pdf
   imagePath: String,          // relative path to generated PNG saved in /uploads/tickets
+  imageUrl: String,           // cloudinary URL for ticket image
+  pdfUrl: String,             // cloudinary URL for PDF ticket
 }, { timestamps: true });
 
 module.exports = mongoose.model('Ticket', TicketSchema);
