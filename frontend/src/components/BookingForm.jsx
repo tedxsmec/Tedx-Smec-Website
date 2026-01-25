@@ -1239,11 +1239,21 @@ export default function BookingForm() {
           <>
             <Card className="mb-6">
               <h2 className="text-2xl font-semibold mb-2">{event.name}</h2>
-              <p className="text-sm text-gray-400 mb-3">
+              {/* <p className="text-sm text-gray-400 mb-3">
                 {event.date
                   ? new Date(event.date).toLocaleString()
                   : "Date TBA"}
-              </p>
+              </p> */}
+              <p className="text-sm text-gray-400 mb-3">
+  {event.date
+    ? (() => {
+        const d = new Date(event.date);
+        d.setHours(9, 0, 0, 0); // 9:00 AM
+        return d.toLocaleString();
+      })()
+    : "Date TBA"}
+</p>
+
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {availability === "available" && (
