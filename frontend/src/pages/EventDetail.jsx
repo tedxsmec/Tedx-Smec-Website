@@ -145,7 +145,12 @@ export default function EventDetail() {
               <Calendar size={20} /> {new Date(event.date).toDateString()}
             </span>
             <span className="flex items-center gap-2">
-              <Clock size={20} /> {new Date(event.date).toLocaleTimeString()}
+              <Clock size={20} />{(() => {
+  const d = new Date(event.date);
+  d.setHours(9, 0, 0, 0); // 9:00 AM
+  return d.toLocaleTimeString();
+})()}
+
             </span>
             <span className="flex items-center gap-2">
               <MapPin size={20} /> {resolveVenue(event)}

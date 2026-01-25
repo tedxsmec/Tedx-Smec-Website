@@ -249,7 +249,15 @@ export default function BookingPage() {
               <div className="space-y-4 text-gray-300">
                 <div className="flex items-center gap-3">
                   <Calendar className="text-red-600" size={20} />
-                  <span>{new Date(event.date).toLocaleString()}</span>
+                  {/* <span>{new Date(event.date).toLocaleString()}</span> */}
+                  <span>
+  {(() => {
+    const d = new Date(event.date);
+    d.setHours(9, 0, 0, 0); // 9:00 AM
+    return d.toLocaleString();
+  })()}
+</span>
+
                 </div>
 
                 <div className="flex items-center gap-3">
