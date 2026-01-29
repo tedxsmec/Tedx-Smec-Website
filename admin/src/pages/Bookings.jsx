@@ -107,8 +107,29 @@ export default function Bookings() {
     link.remove();
   }
 
+  // Calculate counts for pending and paid
+  const pendingCount = bookings.filter(b => b.status === 'pending').length;
+  const paidCount = bookings.filter(b => b.status === 'paid').length;
+  const totalCount = pendingCount + paidCount;
+
   return (
     <div className="p-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/10 border border-yellow-700/40 rounded-lg p-4">
+          <div className="text-sm text-yellow-400/80 font-medium">Pending</div>
+          <div className="text-3xl font-bold text-yellow-300 mt-1">{pendingCount}</div>
+        </div>
+        <div className="bg-gradient-to-br from-green-900/30 to-green-800/10 border border-green-700/40 rounded-lg p-4">
+          <div className="text-sm text-green-400/80 font-medium">Paid</div>
+          <div className="text-3xl font-bold text-green-300 mt-1">{paidCount}</div>
+        </div>
+        <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-700/40 rounded-lg p-4">
+          <div className="text-sm text-blue-400/80 font-medium">Total (Pending + Paid)</div>
+          <div className="text-3xl font-bold text-blue-300 mt-1">{totalCount}</div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">Booked Tickets</h2>
 
