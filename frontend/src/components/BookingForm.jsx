@@ -1290,7 +1290,18 @@ export default function BookingForm() {
                       {remainingTickets} ticket(s) remaining
                     </span>
                   )}
+
+
+                  <div className="mt-4 w-full rounded-xl border border-blue-500/40 bg-blue-900/30 px-5 py-3 flex items-center justify-center animate-pulse">
+              <span className="text-sm md:text-base text-blue-200 font-semibold tracking-wide text-center">
+                🎓 This event is exclusively for{" "}
+                <span className="text-white">SMEC Students</span>
+              </span>
+            </div>
+
+                  
               </div>
+              
             </Card>
 
             {message && (

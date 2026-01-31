@@ -254,11 +254,11 @@ function PersonCard({ data }) {
         <p className="text-xs uppercase tracking-widest text-red-500 font-semibold mt-1">
           {data.designation || data.role || data.department}
         </p>
-        {data.bio && (
+        {/* {data.bio && (
           <p className="text-sm text-gray-300 mt-3 line-clamp-2">
             {data.bio}
           </p>
-        )}
+        )} */}
       </div>
     </div>
   );
