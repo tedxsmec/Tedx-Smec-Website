@@ -797,7 +797,7 @@ async function generateTicketImageBuffer() {
   return null;
 }
 
-/* ================= PDF (UNCHANGED DESIGN) ================= */
+/* ================= PDF (PREMIUM DESIGN) ================= */
 async function generatePdfBuffer(ticket) {
   const qrDataUrl = await generateQrDataUrl(ticket.ticketCode);
   const qrBase64 = qrDataUrl.replace(/^data:image\/png;base64,/, "");
@@ -805,46 +805,140 @@ async function generatePdfBuffer(ticket) {
 
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: "A4", margin: 50 });
+      const doc = new PDFDocument({ size: "A4", margins: { top: 0, bottom: 0, left: 0, right: 0 } });
       const buffers = [];
-
       doc.on("data", b => buffers.push(b));
       doc.on("end", () => resolve(Buffer.concat(buffers)));
 
-      const pageWidth = doc.page.width;
-      const pageStartX = 50;
-      const pageEndX = pageWidth - 50;
+      const W = doc.page.width;
+      const H = doc.page.height;
+      const THEME = { primary: "#E62B1E", black: "#111111", gray: "#777777" };
 
-      doc.font("Helvetica-Bold").fontSize(36).fillColor("#E62B1E").text("TEDxSMEC", { align: "center" });
-      doc.moveDown(0.2).font("Helvetica").fontSize(14).fillColor("#000")
-        .text(ticket.eventName || "Ideas Worth Spreading", { align: "center" });
+      /* ===== HEADER (PREMIUM GRADIENT) ===== */
+      const headerGradient = doc.linearGradient(0, 0, W, 110);
+      headerGradient.stop(0, "#E62B1E").stop(1, "#B81B15");
+      doc.rect(0, 0, W, 110).fill(headerGradient);
 
-      doc.moveDown(1.5);
-      doc.moveTo(pageStartX, doc.y).lineTo(pageEndX, doc.y).strokeColor("#E62B1E").stroke();
-      doc.moveDown(2);
+      // Decorative top accent
+      doc.rect(0, 0, W, 3).fill("#000000");
 
-      const leftX = pageStartX;
-      const rightX = pageWidth - 250;
-      const contentY = doc.y;
+      // TEDx Logo
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(40)
+        .fillColor("#FFFFFF")
+        .text("TEDx", 60, 25, { continued: true })
+        .fontSize(36)
+        .fillColor("#000000")
+        .text("SMEC");
 
-      doc.font("Helvetica-Bold").fontSize(18).text("ENTRY PASS", leftX, contentY);
-      doc.moveDown(1);
+      // Tagline
+      doc
+        .font("Helvetica")
+        .fontSize(9)
+        .fillColor("#FFFFFF")
+        .opacity(0.95)
+        .text("IDEAS WORTH SPREADING", 60, 72, { letterSpacing: 2.5 });
 
-      function row(label, value) {
-        doc.font("Helvetica-Bold").fillColor("#000").text(label, leftX, doc.y, { continued: true });
-        doc.font("Helvetica").fillColor("#E62B1E").text(` ${value || "-"}`);
-        doc.moveDown(0.6);
-      }
+      // College name
+      doc
+        .fontSize(8)
+        .fillColor("#FFFFFF")
+        .opacity(0.85)
+        .text("St. Martin's Engineering College", 60, 90);
+      doc.opacity(1);
 
-      row("Name:", ticket.studentName);
-      if (ticket.rollNumber) row("Roll Number:", ticket.rollNumber);
-      const classInfo = [ticket.year, ticket.department, ticket.section].filter(Boolean).join(" / ");
-      if (classInfo) row("Class:", classInfo);
-      if (ticket.quantity > 1) row("Tickets:", ticket.quantity);
-      row("Ticket Code:", ticket.ticketCode);
-      row("Issued On:", new Date(ticket.createdAt || Date.now()).toLocaleString());
+      /* ===== CONTENT GRID ===== */
+      const startY = 135;
+      let y = startY;
 
-      doc.image(qrBuffer, rightX, contentY + 10, { width: 200, height: 200 });
+      // Section title
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(9)
+        .fillColor(THEME.primary)
+        .text("TICKET INFORMATION", 60, startY - 15, { letterSpacing: 1.5 });
+
+      const field = (label, value) => {
+        doc
+          .font("Helvetica")
+          .fontSize(7.5)
+          .fillColor("#999999")
+          .text(label.toUpperCase(), 60, y, { letterSpacing: 1.5 });
+        y += 11;
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(14)
+          .fillColor(THEME.black)
+          .text(value || "-", 60, y, { width: W - 340 });
+        y += 28;
+      };
+
+      field("Attendee", ticket.studentName);
+      if (ticket.rollNumber) field("Roll Number", ticket.rollNumber);
+      const classInfo = [ticket.year, ticket.department, ticket.section].filter(Boolean).join(" • ");
+      if (classInfo) field("Academic Details", classInfo);
+      field("Ticket Code", ticket.ticketCode);
+
+      /* ===== QR BLOCK (PREMIUM) ===== */
+      const qrBoxX = W - 260;
+      const qrBoxY = startY + 10;
+
+      // QR container
+      doc
+        .rect(qrBoxX - 8, qrBoxY - 8, 176, 176)
+        .lineWidth(3)
+        .strokeColor(THEME.primary)
+        .stroke();
+
+      // QR background
+      doc.rect(qrBoxX - 4, qrBoxY - 4, 168, 168).fill("#f9f9f9");
+
+      // QR header
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(8)
+        .fillColor("#FFFFFF")
+        .text("SCAN", qrBoxX - 4, qrBoxY - 20, { width: 168, align: "center" });
+
+      doc.image(qrBuffer, qrBoxX, qrBoxY, { width: 140 });
+
+      doc
+        .font("Helvetica")
+        .fontSize(7.5)
+        .fillColor(THEME.gray)
+        .text("Present at entry", qrBoxX - 4, qrBoxY + 152, { width: 168, align: "center" });
+
+      /* ===== FOOTER ===== */
+      y += 20;
+      doc
+        .font("Helvetica")
+        .fontSize(9)
+        .fillColor(THEME.primary)
+        .text(
+          "✓ Single Entry • Non-Transferable • Valid for General Admission",
+          60,
+          y,
+          { width: W - 340, align: "center" }
+        );
+
+      // Footer bar
+      doc.rect(0, H - 35, W, 35).fill("#1a1a1a");
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(9)
+        .fillColor(THEME.primary)
+        .text("Ideas Worth Spreading", 60, H - 24, { letterSpacing: 1 });
+
+      doc
+        .font("Helvetica")
+        .fontSize(7)
+        .fillColor("#888888")
+        .text(
+          `Issued: ${ticket.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`,
+          W - 200,
+          H - 24
+        );
 
       doc.end();
     } catch (err) {
@@ -862,18 +956,115 @@ async function sendTicketEmail(ticket) {
     const data = await brevo.sendTransacEmail({
       sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
       to: [{ email: ticket.email }],
-      subject: `🎟 Your TEDx Ticket — ${ticket.ticketCode}`,
+      subject: `Your TEDxSMEC Ticket – ${ticket.ticketCode}`,
       htmlContent: `
-        <h2>Hello ${ticket.studentName} 👋</h2>
-        <p>Your TEDxSMEC ticket is confirmed 🎉</p>
-        <p><b>Ticket Code:</b> ${ticket.ticketCode}</p>
-        <p>Your PDF ticket is attached.</p>
-        <p>— TEDxSMEC Team</p>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+          </style>
+        </head>
+        <body style="margin:0;padding:0;background:#f5f5f5;">
+          <div style="max-width:600px;margin:0 auto;">
+            <!-- RED HEADER -->
+            <div style="background:linear-gradient(135deg, #E62B1E 0%, #B81B15 100%);padding:50px 40px;color:#fff;text-align:center;">
+              <h1 style="margin:0;font-size:48px;font-weight:900;letter-spacing:-1px;">
+                TEDx<span style="font-weight:300;">SMEC</span>
+              </h1>
+              <p style="margin:12px 0 0 0;font-size:11px;letter-spacing:3px;font-weight:600;opacity:0.9;">
+                IDEAS WORTH SPREADING
+              </p>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div style="background:#ffffff;padding:50px 40px;">
+              <p style="margin:0 0 30px 0;font-size:16px;line-height:1.6;color:#333;">
+                Hello <span style="color:#E62B1E;font-weight:700;">${ticket.studentName}</span>,
+              </p>
+
+              <!-- CONFIRMATION BOX -->
+              <div style="background:linear-gradient(135deg, #E62B1E15 0%, #E62B1E08 100%);border-left:5px solid #E62B1E;padding:25px;margin:0 0 35px 0;border-radius:6px;">
+                <p style="margin:0;font-size:16px;font-weight:700;color:#E62B1E;">
+                  ✓ Your Ticket is Confirmed
+                </p>
+                <p style="margin:10px 0 0 0;font-size:14px;color:#555;line-height:1.6;">
+                  You're all set for an inspiring evening of ideas, innovation, and connection at <strong>TEDxSMEC 2026</strong>.
+                </p>
+              </div>
+
+              <!-- TICKET DETAILS -->
+              <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:30px;margin:0 0 35px 0;">
+                <p style="margin:0 0 20px 0;font-size:10px;color:#E62B1E;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-bottom:2px solid #E62B1E;padding-bottom:12px;">
+                  📋 YOUR TICKET DETAILS
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin:0;">
+                  <tr>
+                    <td style="padding:12px 0;width:50%;">
+                      <p style="margin:0 0 6px 0;font-size:9px;color:#999;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Ticket Code</p>
+                      <p style="margin:0;font-size:16px;color:#E62B1E;font-weight:800;">${ticket.ticketCode}</p>
+                    </td>
+                    <td style="padding:12px 0 12px 20px;width:50%;">
+                      <p style="margin:0 0 6px 0;font-size:9px;color:#999;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Student</p>
+                      <p style="margin:0;font-size:16px;color:#E62B1E;font-weight:800;">${ticket.rollNumber || 'N/A'}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding:16px 0;border-top:1px solid #e0e0e0;">
+                      <p style="margin:0 0 6px 0;font-size:9px;color:#999;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Academic Year</p>
+                      <p style="margin:0;font-size:16px;color:#E62B1E;font-weight:800;">${ticket.year || 'N/A'}</p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- INSTRUCTIONS -->
+              <div>
+                <p style="margin:0 0 16px 0;font-size:12px;color:#E62B1E;font-weight:700;letter-spacing:1px;text-transform:uppercase;">🎯 BEFORE YOU ARRIVE</p>
+                <ul style="margin:0;padding:0 0 0 20px;list-style:none;">
+                  <li style="margin:0 0 12px 0;font-size:14px;color:#555;line-height:1.6;">
+                    <span style="color:#E62B1E;font-weight:700;margin-right:8px;">✓</span>Print or screenshot your ticket PDF
+                  </li>
+                  <li style="margin:0 0 12px 0;font-size:14px;color:#555;line-height:1.6;">
+                    <span style="color:#E62B1E;font-weight:700;margin-right:8px;">✓</span>Arrive 30 minutes early for smooth check-in
+                  </li>
+                  <li style="font-size:14px;color:#555;line-height:1.6;">
+                    <span style="color:#E62B1E;font-weight:700;margin-right:8px;">✓</span>Keep your ticket accessible
+                  </li>
+                </ul>
+              </div>
+
+              <!-- DIVIDER -->
+              <hr style="border:none;border-top:1px solid #e0e0e0;margin:35px 0;">
+
+              <!-- CLOSING -->
+              <p style="margin:0 0 20px 0;font-size:14px;color:#666;line-height:1.6;">
+                Questions? <strong style="color:#E62B1E;">Reply to this email</strong> and we'll help.
+              </p>
+
+              <p style="margin:0;font-size:14px;color:#888;">
+                Get ready for ideas worth spreading! 🚀
+              </p>
+            </div>
+
+            <!-- RED FOOTER -->
+            <div style="background:#1a1a1a;color:#999;padding:30px 40px;text-align:center;border-top:4px solid #E62B1E;">
+              <p style="margin:0 0 8px 0;font-size:12px;font-weight:600;letter-spacing:1px;color:#E62B1E;text-transform:uppercase;">
+                TEDxSMEC
+              </p>
+              <p style="margin:0;font-size:11px;color:#888;">
+                St. Martin's Engineering College • Ideas Worth Spreading
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
       `,
       attachment: [
         {
           content: pdfBase64,
-          name: `${ticket.ticketCode}.pdf`
+          name: `TEDxSMEC_Ticket_${ticket.ticketCode}.pdf`
         }
       ]
     });
