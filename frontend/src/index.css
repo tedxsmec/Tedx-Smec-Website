@@ -239,3 +239,27 @@
     cursor: auto !important;
   }
 }
+
+
+@keyframes smecWarning {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+.animate-smecWarning {
+  animation: smecWarning 3s ease-in-out infinite;
+}

@@ -1292,12 +1292,13 @@ export default function BookingForm() {
                   )}
 
 
-                  <div className="mt-4 w-full rounded-xl border border-blue-500/40 bg-blue-900/30 px-5 py-3 flex items-center justify-center animate-pulse">
-              <span className="text-sm md:text-base text-blue-200 font-semibold tracking-wide text-center">
-                🎓 This event is exclusively for{" "}
-                <span className="text-white">SMEC Students</span>
-              </span>
-            </div>
+            <div className="mt-4 w-full rounded-xl border border-red-600 bg-red-900/40 px-6 py-4 flex items-center justify-center animate-smecWarning shadow-[0_0_25px_rgba(220,38,38,0.6)]">
+  <span className="text-base md:text-lg font-extrabold tracking-wide text-red-300 text-center uppercase">
+    ⚠️ This event is exclusively for{" "}
+    <span className="text-white ">SMEC Students</span>
+  </span>
+</div>
+
 
                   
               </div>
