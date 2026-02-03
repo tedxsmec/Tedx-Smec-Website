@@ -1,7 +1,7 @@
 // admin/src/pages/Bookings.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import api from "../api"; // your configured axios instance
-import { X } from "lucide-react"; // optional icon, remove if not available
+import { X, Download, FileText, FileSpreadsheet, File } from "lucide-react"; // optional icon, remove if not available
 
 function formatDate(d) {
   try {
@@ -112,6 +112,150 @@ export default function Bookings() {
   const paidCount = bookings.filter(b => b.status === 'paid').length;
   const totalCount = pendingCount + paidCount;
 
+  // Download handlers for different formats
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async (format) => {
+    setDownloading(true);
+    try {
+      const response = await api.get(`/admin/bookings/export/${format}`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Set filename based on format
+      const timestamp = new Date().toISOString().split('T')[0];
+      let filename = `tickets-${timestamp}`;
+      if (format === 'csv') filename += '.csv';
+      else if (format === 'pdf') filename += '.pdf';
+      else if (format === 'docx') filename += '.docx';
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.response?.data?.error || 'Failed to download file');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownload25K8 = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.get('/admin/bookings/export-25k8/csv', {
+        responseType: 'blob'
+      });
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `tickets-25k8-paid-${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.response?.data?.error || 'Failed to download 25K8 tickets');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownload24K8 = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.get('/admin/bookings/export-24k8/csv', {
+        responseType: 'blob'
+      });
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `tickets-24k8-paid-${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.response?.data?.error || 'Failed to download 24K8 tickets');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownload23K8 = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.get('/admin/bookings/export-23k8/csv', {
+        responseType: 'blob'
+      });
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `tickets-23k8-paid-${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.response?.data?.error || 'Failed to download 23K8 tickets');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownload22K8 = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.get('/admin/bookings/export-22k8/csv', {
+        responseType: 'blob'
+      });
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `tickets-22k8-paid-${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.response?.data?.error || 'Failed to download 22K8 tickets');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="p-4">
       {/* Summary Cards */}
@@ -134,6 +278,75 @@ export default function Bookings() {
         <h2 className="text-xl font-bold">Booked Tickets</h2>
 
         <div className="flex items-center gap-2">
+          {/* Download buttons */}
+          <div className="flex items-center gap-1 border-r border-gray-700 pr-2">
+            <button
+              onClick={() => handleDownload('csv')}
+              disabled={downloading || bookings.length === 0}
+              className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Download as CSV"
+            >
+              <FileSpreadsheet size={16} />
+              CSV
+            </button>
+            <button
+              onClick={() => handleDownload('pdf')}
+              disabled={downloading || bookings.length === 0}
+              className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Download as PDF"
+            >
+              <FileText size={16} />
+              PDF
+            </button>
+            <button
+              onClick={() => handleDownload('docx')}
+              disabled={downloading || bookings.length === 0}
+              className="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Download as Word"
+            >
+              <File size={16} />
+              Word
+            </button>
+          </div>
+
+          {/* 25K8 Paid Tickets CSV */}
+          <button
+            onClick={handleDownload25K8}
+            disabled={downloading}
+            className="px-3 py-2 rounded bg-orange-600 hover:bg-orange-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            title="Download 25K8 Paid Tickets CSV"
+          >
+            <Download size={16} />
+            25K8 Paid
+          </button>
+          <button
+            onClick={handleDownload24K8}
+            disabled={downloading}
+            className="px-3 py-2 rounded bg-amber-600 hover:bg-amber-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-r border-gray-700 pr-2"
+            title="Download 24K8 Paid Tickets CSV"
+          >
+            <Download size={16} />
+            24K8 Paid
+          </button>
+          <button
+            onClick={handleDownload23K8}
+            disabled={downloading}
+            className="px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            title="Download 23K8 Paid Tickets CSV"
+          >
+            <Download size={16} />
+            23K8 Paid
+          </button>
+          <button
+            onClick={handleDownload22K8}
+            disabled={downloading}
+            className="px-3 py-2 rounded bg-lime-600 hover:bg-lime-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-r border-gray-700 pr-2"
+            title="Download 22K8 Paid Tickets CSV"
+          >
+            <Download size={16} />
+            22K8 Paid
+          </button>
+
           <input
             type="text"
             placeholder="Search by name, email, phone or code..."
